@@ -117,27 +117,24 @@ async function run(): Promise<void> {
             },
           });
 
-          const mainMessageBlocks = mainMessage.message?.blocks;
-          mainMessageBlocks?.pop();
-          mainMessageBlocks?.push({
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: successMessageBody,
-            },
-          });
           logger.info("mainMessage.ts", mainMessage.ts);
           logger.info("replyMessage.ts", replyMessage.ts);
 
           await client.chat.update({
             ts: mainMessage.ts || "",
-            token: body.token,
             channel: body.channel?.id || "",
-            blocks: mainMessageBlocks ?? ([] as any),
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: successMessageBody,
+                },
+              },
+            ],
           });
           await client.chat.update({
             channel: body.channel?.id || "",
-            token: body.token,
             ts: replyMessage?.ts || "",
             blocks: response_blocks,
           });
@@ -164,16 +161,6 @@ async function run(): Promise<void> {
             },
           });
 
-          const mainMessageBlocks = mainMessage.message?.blocks;
-          mainMessageBlocks?.pop();
-          mainMessageBlocks?.push({
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: failMessageBody,
-            },
-          });
-
           logger.info("mainMessage.ts", mainMessage.ts);
           logger.info("replyMessage.ts", replyMessage.ts);
 
@@ -181,7 +168,15 @@ async function run(): Promise<void> {
             ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
             token: body.token,
-            blocks: mainMessageBlocks ?? ([] as any),
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: failMessageBody,
+                },
+              },
+            ],
           });
 
           await client.chat.update({

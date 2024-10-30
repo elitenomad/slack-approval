@@ -128,7 +128,7 @@ function run() {
                 ],
             });
             app.action("slack-approval-approve", ({ ack, client, body, logger }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d;
+                var _a, _b, _c;
                 yield ack();
                 try {
                     const response_blocks = (_a = body.message) === null || _a === void 0 ? void 0 : _a.blocks;
@@ -140,26 +140,23 @@ function run() {
                             text: `Approved by <@${body.user.id}> `,
                         },
                     });
-                    const mainMessageBlocks = (_b = mainMessage.message) === null || _b === void 0 ? void 0 : _b.blocks;
-                    mainMessageBlocks === null || mainMessageBlocks === void 0 ? void 0 : mainMessageBlocks.pop();
-                    mainMessageBlocks === null || mainMessageBlocks === void 0 ? void 0 : mainMessageBlocks.push({
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: successMessageBody,
-                        },
-                    });
                     logger.info("mainMessage.ts", mainMessage.ts);
                     logger.info("replyMessage.ts", replyMessage.ts);
                     yield client.chat.update({
                         ts: mainMessage.ts || "",
-                        token: body.token,
-                        channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "",
-                        blocks: mainMessageBlocks !== null && mainMessageBlocks !== void 0 ? mainMessageBlocks : [],
+                        channel: ((_b = body.channel) === null || _b === void 0 ? void 0 : _b.id) || "",
+                        blocks: [
+                            {
+                                type: "section",
+                                text: {
+                                    type: "mrkdwn",
+                                    text: successMessageBody,
+                                },
+                            },
+                        ],
                     });
                     yield client.chat.update({
-                        channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
-                        token: body.token,
+                        channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "",
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
                         blocks: response_blocks,
                     });
@@ -170,10 +167,10 @@ function run() {
                 process.exit(0);
             }));
             app.action("slack-approval-reject", ({ ack, client, body, logger }) => __awaiter(this, void 0, void 0, function* () {
-                var _e, _f, _g, _h;
+                var _d, _e, _f;
                 yield ack();
                 try {
-                    const response_blocks = (_e = body.message) === null || _e === void 0 ? void 0 : _e.blocks;
+                    const response_blocks = (_d = body.message) === null || _d === void 0 ? void 0 : _d.blocks;
                     response_blocks.pop();
                     response_blocks.push({
                         type: "section",
@@ -182,25 +179,24 @@ function run() {
                             text: `Rejected by <@${body.user.id}>`,
                         },
                     });
-                    const mainMessageBlocks = (_f = mainMessage.message) === null || _f === void 0 ? void 0 : _f.blocks;
-                    mainMessageBlocks === null || mainMessageBlocks === void 0 ? void 0 : mainMessageBlocks.pop();
-                    mainMessageBlocks === null || mainMessageBlocks === void 0 ? void 0 : mainMessageBlocks.push({
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: failMessageBody,
-                        },
-                    });
                     logger.info("mainMessage.ts", mainMessage.ts);
                     logger.info("replyMessage.ts", replyMessage.ts);
                     yield client.chat.update({
                         ts: mainMessage.ts || "",
-                        channel: ((_g = body.channel) === null || _g === void 0 ? void 0 : _g.id) || "",
+                        channel: ((_e = body.channel) === null || _e === void 0 ? void 0 : _e.id) || "",
                         token: body.token,
-                        blocks: mainMessageBlocks !== null && mainMessageBlocks !== void 0 ? mainMessageBlocks : [],
+                        blocks: [
+                            {
+                                type: "section",
+                                text: {
+                                    type: "mrkdwn",
+                                    text: failMessageBody,
+                                },
+                            },
+                        ],
                     });
                     yield client.chat.update({
-                        channel: ((_h = body.channel) === null || _h === void 0 ? void 0 : _h.id) || "",
+                        channel: ((_f = body.channel) === null || _f === void 0 ? void 0 : _f.id) || "",
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
                         token: body.token,
                         blocks: response_blocks,
