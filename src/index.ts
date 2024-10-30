@@ -39,8 +39,11 @@ async function run(): Promise<void> {
     const github_server_url = process.env.GITHUB_SERVER_URL || "";
     const github_repos = process.env.GITHUB_REPOSITORY || "";
     const run_id = process.env.GITHUB_RUN_ID || "";
-    const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
+    const run_number = process.env.GITHUB_RUN_NUMBER || "";
+    const run_attempt = process.env.GITHUB_RUN_ATTEMPT || "";
     const workflow = process.env.GITHUB_WORKFLOW || "";
+    const aid = `${github_repos}-${workflow}-${run_id}-${run_number}-${run_attempt}`;
+    const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
 
     const mainTitleBlock = {
       type: "section",
@@ -83,7 +86,7 @@ async function run(): Promise<void> {
                 text: "approve",
               },
               style: "primary",
-              value: "approve",
+              value: aid,
               action_id: "slack-approval-approve",
             },
             {
@@ -94,7 +97,7 @@ async function run(): Promise<void> {
                 text: "reject",
               },
               style: "danger",
-              value: "reject",
+              value: aid,
               action_id: "slack-approval-reject",
             },
           ],
@@ -144,9 +147,16 @@ async function run(): Promise<void> {
 
     app.action(
       "slack-approval-approve",
-      async ({ ack, client, body, logger }) => {
+      async ({ ack, client, body, logger, action }) => {
         await ack();
+        if (action.type !== "button") {
+          return;
+        }
+        if (action.value !== aid) {
+          return;
+        }
         const approveResult = approve(body.user.id);
+
         try {
           if (approveResult === "approved") {
             await client.chat.update({
@@ -180,8 +190,14 @@ async function run(): Promise<void> {
 
     app.action(
       "slack-approval-reject",
-      async ({ ack, client, body, logger }) => {
+      async ({ ack, client, body, logger, action }) => {
         await ack();
+        if (action.type !== "button") {
+          return;
+        }
+        if (action.value !== aid) {
+          return;
+        }
         try {
           const response_blocks = (<BlockAction>body).message?.blocks;
           response_blocks.pop();

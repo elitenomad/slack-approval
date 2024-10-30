@@ -66,8 +66,11 @@ function run() {
             const github_server_url = process.env.GITHUB_SERVER_URL || "";
             const github_repos = process.env.GITHUB_REPOSITORY || "";
             const run_id = process.env.GITHUB_RUN_ID || "";
-            const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
+            const run_number = process.env.GITHUB_RUN_NUMBER || "";
+            const run_attempt = process.env.GITHUB_RUN_ATTEMPT || "";
             const workflow = process.env.GITHUB_WORKFLOW || "";
+            const aid = `${github_repos}-${workflow}-${run_id}-${run_number}-${run_attempt}`;
+            const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
             const mainTitleBlock = {
                 type: "section",
                 text: {
@@ -108,7 +111,7 @@ function run() {
                                     text: "approve",
                                 },
                                 style: "primary",
-                                value: "approve",
+                                value: aid,
                                 action_id: "slack-approval-approve",
                             },
                             {
@@ -119,7 +122,7 @@ function run() {
                                     text: "reject",
                                 },
                                 style: "danger",
-                                value: "reject",
+                                value: aid,
                                 action_id: "slack-approval-reject",
                             },
                         ],
@@ -160,9 +163,15 @@ function run() {
             });
             core.exportVariable("mainMessageTs", mainMessage.ts);
             core.exportVariable("replyMessageTs", replyMessage.ts);
-            app.action("slack-approval-approve", ({ ack, client, body, logger }) => __awaiter(this, void 0, void 0, function* () {
+            app.action("slack-approval-approve", ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b;
                 yield ack();
+                if (action.type !== "button") {
+                    return;
+                }
+                if (action.value !== aid) {
+                    return;
+                }
                 const approveResult = approve(body.user.id);
                 try {
                     if (approveResult === "approved") {
@@ -193,9 +202,15 @@ function run() {
                     process.exit(0);
                 }
             }));
-            app.action("slack-approval-reject", ({ ack, client, body, logger }) => __awaiter(this, void 0, void 0, function* () {
+            app.action("slack-approval-reject", ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
                 var _c, _d, _e;
                 yield ack();
+                if (action.type !== "button") {
+                    return;
+                }
+                if (action.value !== aid) {
+                    return;
+                }
                 try {
                     const response_blocks = (_c = body.message) === null || _c === void 0 ? void 0 : _c.blocks;
                     response_blocks.pop();
