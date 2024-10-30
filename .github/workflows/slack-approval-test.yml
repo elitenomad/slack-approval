@@ -9,6 +9,8 @@ on:
       - opened
       - synchronize
       - reopened
+  workflow_dispatch:
+    
 
 jobs:
   approval:
