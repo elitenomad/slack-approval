@@ -32,8 +32,8 @@ async function run(): Promise<void> {
     const pendingMessageBody = "승인 대기중";
     const successMessageBody = "승인 완료";
     const failMessageBody = "승인 거절";
-    const approvals = ["user1", "user2"];
-    const minimumApprovalCount = 2;
+    const approvals = ["U07U2EYRBGD"];
+    const minimumApprovalCount = 1;
 
     // 메인 메시지 전송
     const mainMessage = await web.chat.postMessage({
@@ -67,9 +67,9 @@ async function run(): Promise<void> {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*필요 승인자 수:* ${minimumApprovalCount}\n*현재 승인자:* ${approvals.join(
+            text: `*필요 승인자 수:* ${minimumApprovalCount}\n*남은 승인자:* <@${approvals.join(
               ", "
-            )}`,
+            )}>`,
           },
         },
         {
@@ -126,14 +126,18 @@ async function run(): Promise<void> {
               text: successMessageBody,
             },
           });
+          logger.info("mainMessage.ts", mainMessage.ts);
+          logger.info("replyMessage.ts", replyMessage.ts);
 
           await client.chat.update({
             ts: mainMessage.ts || "",
+            token: body.token,
             channel: body.channel?.id || "",
             blocks: mainMessageBlocks ?? ([] as any),
           });
           await client.chat.update({
             channel: body.channel?.id || "",
+            token: body.token,
             ts: replyMessage?.ts || "",
             blocks: response_blocks,
           });
@@ -170,15 +174,20 @@ async function run(): Promise<void> {
             },
           });
 
+          logger.info("mainMessage.ts", mainMessage.ts);
+          logger.info("replyMessage.ts", replyMessage.ts);
+
           await client.chat.update({
             ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
+            token: body.token,
             blocks: mainMessageBlocks ?? ([] as any),
           });
 
           await client.chat.update({
             channel: body.channel?.id || "",
             ts: replyMessage?.ts || "",
+            token: body.token,
             blocks: response_blocks,
           });
         } catch (error) {

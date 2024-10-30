@@ -62,8 +62,8 @@ function run() {
             const pendingMessageBody = "승인 대기중";
             const successMessageBody = "승인 완료";
             const failMessageBody = "승인 거절";
-            const approvals = ["user1", "user2"];
-            const minimumApprovalCount = 2;
+            const approvals = ["U07U2EYRBGD"];
+            const minimumApprovalCount = 1;
             // 메인 메시지 전송
             const mainMessage = yield web.chat.postMessage({
                 channel: channel_id,
@@ -95,7 +95,7 @@ function run() {
                         type: "section",
                         text: {
                             type: "mrkdwn",
-                            text: `*필요 승인자 수:* ${minimumApprovalCount}\n*현재 승인자:* ${approvals.join(", ")}`,
+                            text: `*필요 승인자 수:* ${minimumApprovalCount}\n*남은 승인자:* <@${approvals.join(", ")}>`,
                         },
                     },
                     {
@@ -149,13 +149,17 @@ function run() {
                             text: successMessageBody,
                         },
                     });
+                    logger.info("mainMessage.ts", mainMessage.ts);
+                    logger.info("replyMessage.ts", replyMessage.ts);
                     yield client.chat.update({
                         ts: mainMessage.ts || "",
+                        token: body.token,
                         channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "",
                         blocks: mainMessageBlocks !== null && mainMessageBlocks !== void 0 ? mainMessageBlocks : [],
                     });
                     yield client.chat.update({
                         channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
+                        token: body.token,
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
                         blocks: response_blocks,
                     });
@@ -187,14 +191,18 @@ function run() {
                             text: failMessageBody,
                         },
                     });
+                    logger.info("mainMessage.ts", mainMessage.ts);
+                    logger.info("replyMessage.ts", replyMessage.ts);
                     yield client.chat.update({
                         ts: mainMessage.ts || "",
                         channel: ((_g = body.channel) === null || _g === void 0 ? void 0 : _g.id) || "",
+                        token: body.token,
                         blocks: mainMessageBlocks !== null && mainMessageBlocks !== void 0 ? mainMessageBlocks : [],
                     });
                     yield client.chat.update({
                         channel: ((_h = body.channel) === null || _h === void 0 ? void 0 : _h.id) || "",
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
+                        token: body.token,
                         blocks: response_blocks,
                     });
                 }
