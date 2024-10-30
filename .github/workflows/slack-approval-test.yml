@@ -31,4 +31,8 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-        timeout-minutes: 10
+        with:
+          approvers: U07U2EYRBGD
+          minimumApprovalCount: 1
+          
+        timeout-minutes: 60
