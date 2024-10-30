@@ -43,7 +43,7 @@ async function run(): Promise<void> {
     const run_attempt = process.env.GITHUB_RUN_ATTEMPT || "";
     const workflow = process.env.GITHUB_WORKFLOW || "";
     const aid = `${github_repos}-${workflow}-${run_id}-${run_number}-${run_attempt}`;
-    const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
+    // const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
 
     const mainTitleBlock = {
       type: "section",
@@ -107,7 +107,7 @@ async function run(): Promise<void> {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Approved :check:`,
+          text: `Approved :white_check_mark:`,
         },
       };
     };
@@ -205,7 +205,7 @@ async function run(): Promise<void> {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `Rejected by <@${body.user.id}>`,
+              text: `Rejected by <@${body.user.id}> :x:`,
             },
           });
 
