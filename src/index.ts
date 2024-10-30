@@ -196,7 +196,6 @@ async function run(): Promise<void> {
           await client.chat.update({
             ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
-            token: body.token,
             blocks: [
               mainTitleBlock,
               renderMessageBody({ messageBody: failMessageBody }),
@@ -206,7 +205,6 @@ async function run(): Promise<void> {
           await client.chat.update({
             channel: body.channel?.id || "",
             ts: replyMessage?.ts || "",
-            token: body.token,
             blocks: response_blocks,
           });
         } catch (error) {

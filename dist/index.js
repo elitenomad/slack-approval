@@ -209,7 +209,6 @@ function run() {
                     yield client.chat.update({
                         ts: mainMessage.ts || "",
                         channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
-                        token: body.token,
                         blocks: [
                             mainTitleBlock,
                             renderMessageBody({ messageBody: failMessageBody }),
@@ -218,7 +217,6 @@ function run() {
                     yield client.chat.update({
                         channel: ((_e = body.channel) === null || _e === void 0 ? void 0 : _e.id) || "",
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
-                        token: body.token,
                         blocks: response_blocks,
                     });
                 }
