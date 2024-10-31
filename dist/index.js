@@ -124,8 +124,9 @@ function run() {
                         type: "mrkdwn",
                         text: `*Required Approvers Count:* ${minimumApprovalCount}\n*Remaining Approvers:* ${requiredApprovers
                             .map((v) => `<@${v}>`)
-                            .join(", ")}\n
-            Approvers:${approvers.map((v) => `<@${v}>`).join(", ")}\n`,
+                            .join(", ")}\n${approvers.length > 0
+                            ? `Approvers: ${approvers.map((v) => `<@${v}>`).join(", ")} `
+                            : ""}\n`,
                     },
                 };
             };
