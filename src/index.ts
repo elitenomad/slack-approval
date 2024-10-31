@@ -60,7 +60,7 @@ async function run(): Promise<void> {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `GitHub Actions Approval Request`,
+          text: "GitHub Actions Approval Request",
         },
       },
       {
@@ -199,29 +199,14 @@ async function run(): Promise<void> {
         const approveResult = approve(body.user.id);
 
         try {
-          console.log(hasBlocks(successMessageBlocks), successMessageBlocks);
-          console.log(hasBlocks(failMessageBlocks), failMessageBlocks);
-          console.log(
-            hasBlocks(defaultMainMessageBlocks),
-            defaultMainMessageBlocks
-          );
-          console.log(hasBlocks(baseMessageBlocks), baseMessageBlocks);
           if (approveResult === "approved") {
             await client.chat.update({
               ts: mainMessage.ts || "",
               channel: body.channel?.id || "",
               text: "",
-              blocks: [
-                {
-                  type: "section",
-                  text: {
-                    type: "mrkdwn",
-                    text: hasBlocks(successMessageBlocks)
-                      ? successMessageBlocks
-                      : defaultMainMessageBlocks,
-                  },
-                },
-              ],
+              blocks: hasBlocks(successMessageBlocks)
+                ? successMessageBlocks
+                : defaultMainMessageBlocks,
             });
           }
           await client.chat.update({

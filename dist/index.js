@@ -81,7 +81,7 @@ function run() {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `GitHub Actions Approval Request`,
+                        text: "GitHub Actions Approval Request",
                     },
                 },
                 {
@@ -209,26 +209,14 @@ function run() {
                 }
                 const approveResult = approve(body.user.id);
                 try {
-                    console.log(hasBlocks(successMessageBlocks), successMessageBlocks);
-                    console.log(hasBlocks(failMessageBlocks), failMessageBlocks);
-                    console.log(hasBlocks(defaultMainMessageBlocks), defaultMainMessageBlocks);
-                    console.log(hasBlocks(baseMessageBlocks), baseMessageBlocks);
                     if (approveResult === "approved") {
                         yield client.chat.update({
                             ts: mainMessage.ts || "",
                             channel: ((_a = body.channel) === null || _a === void 0 ? void 0 : _a.id) || "",
                             text: "",
-                            blocks: [
-                                {
-                                    type: "section",
-                                    text: {
-                                        type: "mrkdwn",
-                                        text: hasBlocks(successMessageBlocks)
-                                            ? successMessageBlocks
-                                            : defaultMainMessageBlocks,
-                                    },
-                                },
-                            ],
+                            blocks: hasBlocks(successMessageBlocks)
+                                ? successMessageBlocks
+                                : defaultMainMessageBlocks,
                         });
                     }
                     yield client.chat.update({
