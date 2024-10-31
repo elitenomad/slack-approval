@@ -2,18 +2,49 @@
 
 custom action to send approval request to Slack
 
-![](https://user-images.githubusercontent.com/35091584/195488201-acc24277-5e0c-431f-a4b3-21b4430d5d80.png)
+![](img/approve_at_reply.png)
+![](img/approved.png)
 
 
-- Post a message in Slack with a "Aoorove" and "Reject" buttons. 
-- Clicking on "Approve" will execute next steps.
-- Clicking on "Reject" will cause workflow to fail.
+- When action is triggered, Post or Update in Slack, a reply message appears simultaneously with "Approve" and "Reject" buttons
+- Clicking on "Approve" will execute next steps
+- Clicking on "Reject" will cause workflow to fail
 
 # How To Use
 
 - First, create a Slack App and install in your workspace.
-- Second, add `chat:write` and `im:write` to OAuth Scope on OAuth & Permissions page.
-- Finally, **Enable Socket Mode**.
+- Second. set the `App Manifest`
+```json
+{
+    "display_information": {
+        "name": "ApprveApp"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "ApproveApp",
+            "always_online": false
+        }
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "app_mentions:read",
+                "channels:join",
+                "chat:write",
+                "users:read"
+            ]
+        }
+    },
+    "settings": {
+        "interactivity": {
+            "is_enabled": true
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": true,
+        "token_rotation_enabled": false
+    }
+}
+```
 
 ```
 jobs:
@@ -21,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: send approval
-        uses: varu3/slack-approval@main
+        uses: tigerwest/slack-approval@main
         env:
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -48,5 +79,38 @@ jobs:
 
     - Channel ID for which you want to send approval.
 
-- Set `timeout-minutes`
-  - Set the time to wait for approval.
+- Set Inputs
+
+  - `baseMessageTs`
+    - If provided, updates the target message. If not provided, creates a new message
+    - Optional
+
+  - `approvers`
+    - A comma-separated list of approvers' slack user ids
+    - Required
+
+  - `minimumApprovalCount`
+    - The minimum number of approvals required
+    - Optional (default: "1")
+
+  - `baseMessageBlocks`
+    - The title of the message indicating approval is needed
+    - Optional (default: "[]")
+
+  - `successMessageBlocks`
+    - The message body indicating approval is pending
+    - Optional (default: "[]")
+
+  - `failMessageBlocks`
+    - The message body indicating approval has been rejected
+    - Optional (default: "[]")
+
+
+- outputs
+
+- `mainMessageTs`
+  - Timestamp of the main message sent to Slack
+
+- `replyMessageTs`
+  - Timestamp of the reply message sent to Slack 
+
