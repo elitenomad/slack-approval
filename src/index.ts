@@ -55,44 +55,46 @@ async function run(): Promise<void> {
     const runnerOS = process.env.RUNNER_OS || "";
     const actor = process.env.GITHUB_ACTOR || "";
     const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
-    const defaultMainMessageBlocks = [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "GitHub Actions Approval Request",
-        },
-      },
-      {
-        type: "section",
-        fields: [
+    const mainMessageBlocks = hasBlocks(baseMessageBlocks)
+      ? baseMessageBlocks
+      : [
           {
-            type: "mrkdwn",
-            text: `*GitHub Actor:*\n${actor}`,
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "GitHub Actions Approval Request",
+            },
           },
           {
-            type: "mrkdwn",
-            text: `*Repos:*\n${github_server_url}/${github_repos}`,
+            type: "section",
+            fields: [
+              {
+                type: "mrkdwn",
+                text: `*GitHub Actor:*\n${actor}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Repos:*\n${github_server_url}/${github_repos}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Actions URL:*\n${actionsUrl}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*GITHUB_RUN_ID:*\n${run_id}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Workflow:*\n${workflow}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*RunnerOS:*\n${runnerOS}`,
+              },
+            ],
           },
-          {
-            type: "mrkdwn",
-            text: `*Actions URL:*\n${actionsUrl}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*GITHUB_RUN_ID:*\n${run_id}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*Workflow:*\n${workflow}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*RunnerOS:*\n${runnerOS}`,
-          },
-        ],
-      },
-    ];
+        ];
 
     const renderReplyTitle = () => {
       return {
@@ -164,16 +166,13 @@ async function run(): Promise<void> {
           channel: channel_id,
           ts: baseMessageTs,
           text: "",
-          blocks: hasBlocks(baseMessageBlocks)
-            ? baseMessageBlocks
-            : defaultMainMessageBlocks,
+          blocks: mainMessageBlocks,
         })
       : await web.chat.postMessage({
           channel: channel_id,
           text: "",
-          blocks: hasBlocks(baseMessageBlocks)
-            ? baseMessageBlocks
-            : defaultMainMessageBlocks,
+
+          blocks: mainMessageBlocks,
         });
 
     const replyMessage = await web.chat.postMessage({
@@ -206,7 +205,7 @@ async function run(): Promise<void> {
               text: "",
               blocks: hasBlocks(successMessageBlocks)
                 ? successMessageBlocks
-                : defaultMainMessageBlocks,
+                : mainMessageBlocks,
             });
           }
           await client.chat.update({
@@ -252,7 +251,7 @@ async function run(): Promise<void> {
             text: "",
             blocks: hasBlocks(failMessageBlocks)
               ? failMessageBlocks
-              : defaultMainMessageBlocks,
+              : mainMessageBlocks,
           });
 
           await client.chat.update({
