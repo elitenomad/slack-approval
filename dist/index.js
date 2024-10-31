@@ -196,6 +196,34 @@ function run() {
             });
             core.exportVariable("mainMessageTs", mainMessage.ts);
             core.exportVariable("replyMessageTs", replyMessage.ts);
+            function cancelHandler() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    yield web.chat.update({
+                        ts: mainMessage.ts,
+                        blocks: failMessageBlocks,
+                        channel: channel_id,
+                        text: "",
+                    });
+                    yield web.chat.update({
+                        ts: replyMessage.ts,
+                        text: "",
+                        blocks: [
+                            {
+                                type: "section",
+                                text: {
+                                    type: "mrkdwn",
+                                    text: `Canceled :radio_button: :leftwards_arrow_with_hook:`,
+                                },
+                            },
+                        ],
+                        channel: channel_id,
+                    });
+                    process.exit(1);
+                });
+            }
+            process.on("SIGTERM", cancelHandler);
+            process.on("SIGINT", cancelHandler);
+            process.on("SIGBREAK", cancelHandler);
             app.action("slack-approval-approve", ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b;
                 yield ack();
@@ -270,29 +298,6 @@ function run() {
                 }
                 process.exit(1);
             }));
-            process.on("SIGTERM", () => {
-                web.chat.update({
-                    ts: mainMessage.ts,
-                    blocks: failMessageBlocks,
-                    channel: channel_id,
-                    text: "",
-                    attachments: [],
-                });
-                web.chat.update({
-                    ts: replyMessage.ts,
-                    text: "",
-                    blocks: [
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: `Canceled :radio_button: :leftwards_arrow_with_hook:`,
-                            },
-                        },
-                    ],
-                    channel: channel_id,
-                });
-            });
             (() => __awaiter(this, void 0, void 0, function* () {
                 yield app.start(3000);
                 console.log("Waiting Approval reaction.....");

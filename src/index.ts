@@ -185,6 +185,34 @@ async function run(): Promise<void> {
     core.exportVariable("mainMessageTs", mainMessage.ts);
     core.exportVariable("replyMessageTs", replyMessage.ts);
 
+    async function cancelHandler() {
+      await web.chat.update({
+        ts: mainMessage.ts!,
+        blocks: failMessageBlocks,
+        channel: channel_id,
+        text: "",
+      });
+      await web.chat.update({
+        ts: replyMessage.ts!,
+        text: "",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `Canceled :radio_button: :leftwards_arrow_with_hook:`,
+            },
+          },
+        ],
+        channel: channel_id,
+      });
+      process.exit(1);
+    }
+
+    process.on("SIGTERM", cancelHandler);
+    process.on("SIGINT", cancelHandler);
+    process.on("SIGBREAK", cancelHandler);
+
     app.action(
       "slack-approval-approve",
       async ({ ack, client, body, logger, action }) => {
@@ -267,29 +295,7 @@ async function run(): Promise<void> {
         process.exit(1);
       }
     );
-    process.on("SIGTERM", () => {
-      web.chat.update({
-        ts: mainMessage.ts!,
-        blocks: failMessageBlocks,
-        channel: channel_id,
-        text: "",
-        attachments: [],
-      });
-      web.chat.update({
-        ts: replyMessage.ts!,
-        text: "",
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `Canceled :radio_button: :leftwards_arrow_with_hook:`,
-            },
-          },
-        ],
-        channel: channel_id,
-      });
-    });
+
     (async () => {
       await app.start(3000);
       console.log("Waiting Approval reaction.....");
