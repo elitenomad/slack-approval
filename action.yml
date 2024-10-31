@@ -22,12 +22,18 @@ inputs:
   baseMessageBlocks:
     description: "The title of the message indicating approval is needed"
     required: false
+    default: |
+      []
   successMessageBlocks:
     description: "The message body indicating approval is pending"
     required: false
+    default: |
+      []
   failMessageBlocks:
     description: "The message body indicating approval has been rejected"
     required: false
+    default: |
+      []
 
 outputs:
   mainMessageTs:
