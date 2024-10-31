@@ -58,13 +58,14 @@ custom action to send approval request to Slack
 }
 ```
 
+- and set workflow step
 ```yaml
 jobs:
   approval:
     runs-on: ubuntu-latest
     steps:
       - name: send approval
-        uses: tigerwest/slack-approval@main
+        uses: tigerwest/slack-approval@v1.0.0
         env:
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
