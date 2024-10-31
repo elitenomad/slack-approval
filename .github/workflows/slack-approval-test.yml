@@ -34,27 +34,6 @@ jobs:
           approvers: U07U2EYRBGD
           minimumApprovalCount: 1
           baseMessageBlocks: |
-            [
-              {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "GitHub Actions Approval Request"
-                  }
-              },
-              {
-                "type": "section",
-                "fields": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "*GitHub Actor:*\n ${{github.actor}}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Repos:*\n${{github.repository}}"
-                  }
-                ]
-              }
-            ]
+            []
 
         timeout-minutes: 60
