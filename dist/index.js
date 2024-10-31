@@ -178,12 +178,14 @@ function run() {
                 ? yield web.chat.update({
                     channel: channel_id,
                     ts: baseMessageTs,
+                    text: "",
                     blocks: hasBlocks(baseMessageBlocks)
                         ? baseMessageBlocks
                         : defaultMainMessageBlocks,
                 })
                 : yield web.chat.postMessage({
                     channel: channel_id,
+                    text: "",
                     blocks: hasBlocks(baseMessageBlocks)
                         ? baseMessageBlocks
                         : defaultMainMessageBlocks,
@@ -211,6 +213,7 @@ function run() {
                         yield client.chat.update({
                             ts: mainMessage.ts || "",
                             channel: ((_a = body.channel) === null || _a === void 0 ? void 0 : _a.id) || "",
+                            text: "",
                             blocks: [
                                 {
                                     type: "section",
@@ -227,6 +230,7 @@ function run() {
                     yield client.chat.update({
                         channel: ((_b = body.channel) === null || _b === void 0 ? void 0 : _b.id) || "",
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
+                        text: "",
                         blocks: [renderReplyTitle(), renderReplyBody()],
                     });
                 }
@@ -259,6 +263,7 @@ function run() {
                     yield client.chat.update({
                         ts: mainMessage.ts || "",
                         channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
+                        text: "",
                         blocks: hasBlocks(failMessageBlocks)
                             ? failMessageBlocks
                             : defaultMainMessageBlocks,
@@ -266,6 +271,7 @@ function run() {
                     yield client.chat.update({
                         channel: ((_e = body.channel) === null || _e === void 0 ? void 0 : _e.id) || "",
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
+                        text: "",
                         blocks: response_blocks,
                     });
                 }
@@ -279,10 +285,12 @@ function run() {
                     ts: mainMessage.ts,
                     blocks: failMessageBlocks,
                     channel: channel_id,
+                    text: "",
                     attachments: [],
                 });
                 web.chat.update({
                     ts: replyMessage.ts,
+                    text: "",
                     blocks: [
                         {
                             type: "section",

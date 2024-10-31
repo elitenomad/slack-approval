@@ -163,12 +163,14 @@ async function run(): Promise<void> {
       ? await web.chat.update({
           channel: channel_id,
           ts: baseMessageTs,
+          text: "",
           blocks: hasBlocks(baseMessageBlocks)
             ? baseMessageBlocks
             : defaultMainMessageBlocks,
         })
       : await web.chat.postMessage({
           channel: channel_id,
+          text: "",
           blocks: hasBlocks(baseMessageBlocks)
             ? baseMessageBlocks
             : defaultMainMessageBlocks,
@@ -201,6 +203,7 @@ async function run(): Promise<void> {
             await client.chat.update({
               ts: mainMessage.ts || "",
               channel: body.channel?.id || "",
+              text: "",
               blocks: [
                 {
                   type: "section",
@@ -217,6 +220,7 @@ async function run(): Promise<void> {
           await client.chat.update({
             channel: body.channel?.id || "",
             ts: replyMessage?.ts || "",
+            text: "",
             blocks: [renderReplyTitle(), renderReplyBody()],
           });
         } catch (error) {
@@ -253,6 +257,7 @@ async function run(): Promise<void> {
           await client.chat.update({
             ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
+            text: "",
             blocks: hasBlocks(failMessageBlocks)
               ? failMessageBlocks
               : defaultMainMessageBlocks,
@@ -261,6 +266,7 @@ async function run(): Promise<void> {
           await client.chat.update({
             channel: body.channel?.id || "",
             ts: replyMessage?.ts || "",
+            text: "",
             blocks: response_blocks,
           });
         } catch (error) {
@@ -275,10 +281,12 @@ async function run(): Promise<void> {
         ts: mainMessage.ts!,
         blocks: failMessageBlocks,
         channel: channel_id,
+        text: "",
         attachments: [],
       });
       web.chat.update({
         ts: replyMessage.ts!,
+        text: "",
         blocks: [
           {
             type: "section",
