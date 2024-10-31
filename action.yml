@@ -9,30 +9,25 @@ branding:
   color: green
 
 inputs:
+  baseMessageTs:
+    description: target message ts
   approvers:
-    description: "A comma-separated list of approvers' usernames"
+    description: "A comma-separated list of approvers' slack user ids"
     required: true
     default: ""
   minimumApprovalCount:
     description: "The minimum number of approvals required"
     required: false
     default: "1"
-  baseMessageTitle:
+  baseMessageBlocks:
     description: "The title of the message indicating approval is needed"
     required: false
-    default: "Approval required for this task"
-  pendingMessageBody:
+  successMessageBlocks:
     description: "The message body indicating approval is pending"
     required: false
-    default: "Approval pending"
-  successMessageBody:
-    description: "The message body indicating approval has been granted"
-    required: false
-    default: "Approval granted"
-  failMessageBody:
+  failMessageBlocks:
     description: "The message body indicating approval has been rejected"
     required: false
-    default: "Approval rejected"
 
 outputs:
   mainMessageTs:

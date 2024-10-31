@@ -6,15 +6,20 @@ const token = process.env.SLACK_BOT_TOKEN || "";
 const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
 const slackAppToken = process.env.SLACK_APP_TOKEN || "";
 const channel_id = process.env.SLACK_CHANNEL_ID || "";
+const baseMessageTs = core.getInput("baseMessageTs");
 const approvers = core
   .getInput("approvers", { required: true, trimWhitespace: true })
   ?.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
-
-const baseMessageTitle = core.getInput("baseMessageTitle");
-const pendingMessageBody = core.getInput("pendingMessageBody");
-const successMessageBody = core.getInput("successMessageBody");
-const failMessageBody = core.getInput("failMessageBody");
+const baseMessageBlocks = JSON.parse(
+  core.getMultilineInput("baseMessageBlocks").join("\n")
+);
+const successMessageBlocks = JSON.parse(
+  core.getMultilineInput("successMessageBlocks").join("\n")
+);
+const failMessageBlocks = JSON.parse(
+  core.getMultilineInput("failMessageBlocks").join("\n")
+);
 
 const app = new App({
   token: token,
@@ -31,6 +36,9 @@ if (minimumApprovalCount > approvers.length) {
   );
   process.exit(1);
 }
+function hasBlocks(inputs: any) {
+  return inputs.length > 0;
+}
 
 async function run(): Promise<void> {
   try {
@@ -43,24 +51,48 @@ async function run(): Promise<void> {
     const run_attempt = process.env.GITHUB_RUN_ATTEMPT || "";
     const workflow = process.env.GITHUB_WORKFLOW || "";
     const aid = `${github_repos}-${workflow}-${run_id}-${run_number}-${run_attempt}`;
-    // const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
-
-    const mainTitleBlock = {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: baseMessageTitle,
-      },
-    };
-    const renderMessageBody = ({ messageBody }: { messageBody: string }) => {
-      return {
+    const runnerOS = process.env.RUNNER_OS || "";
+    const actor = process.env.GITHUB_ACTOR || "";
+    const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
+    const defaultMainMessageBlocks = [
+      {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: messageBody,
+          text: `GitHub Actions Approval Request`,
         },
-      };
-    };
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: `*GitHub Actor:*\n${actor}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*Repos:*\n${github_server_url}/${github_repos}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*Actions URL:*\n${actionsUrl}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*GITHUB_RUN_ID:*\n${run_id}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*Workflow:*\n${workflow}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*RunnerOS:*\n${runnerOS}`,
+          },
+        ],
+      },
+    ];
+
     const renderReplyTitle = () => {
       return {
         type: "section",
@@ -107,7 +139,7 @@ async function run(): Promise<void> {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Approved :white_check_mark:`,
+          text: `Approved ✅`,
         },
       };
     };
@@ -126,14 +158,20 @@ async function run(): Promise<void> {
       return "approved";
     }
 
-    const mainMessage = await web.chat.postMessage({
-      channel: channel_id,
-      text: baseMessageTitle,
-      blocks: [
-        mainTitleBlock,
-        renderMessageBody({ messageBody: pendingMessageBody }),
-      ],
-    });
+    const mainMessage = baseMessageTs
+      ? await web.chat.update({
+          channel: channel_id,
+          ts: baseMessageTs,
+          blocks: hasBlocks(baseMessageBlocks)
+            ? baseMessageBlocks
+            : defaultMainMessageBlocks,
+        })
+      : await web.chat.postMessage({
+          channel: channel_id,
+          blocks: hasBlocks(baseMessageBlocks)
+            ? baseMessageBlocks
+            : defaultMainMessageBlocks,
+        });
 
     const replyMessage = await web.chat.postMessage({
       channel: channel_id,
@@ -167,7 +205,9 @@ async function run(): Promise<void> {
                   type: "section",
                   text: {
                     type: "mrkdwn",
-                    text: successMessageBody,
+                    text: hasBlocks(successMessageBlocks)
+                      ? successMessageBlocks
+                      : defaultMainMessageBlocks,
                   },
                 },
               ],
@@ -205,17 +245,16 @@ async function run(): Promise<void> {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `Rejected by <@${body.user.id}> :x:`,
+              text: `Rejected by <@${body.user.id}> ❌`,
             },
           });
 
           await client.chat.update({
             ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
-            blocks: [
-              mainTitleBlock,
-              renderMessageBody({ messageBody: failMessageBody }),
-            ],
+            blocks: hasBlocks(failMessageBlocks)
+              ? failMessageBlocks
+              : defaultMainMessageBlocks,
           });
 
           await client.chat.update({
@@ -230,7 +269,27 @@ async function run(): Promise<void> {
         process.exit(1);
       }
     );
-
+    process.on("SIGTERM", () => {
+      web.chat.update({
+        ts: mainMessage.ts!,
+        blocks: failMessageBlocks,
+        channel: channel_id,
+        attachments: [],
+      });
+      web.chat.update({
+        ts: replyMessage.ts!,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `Canceled 🔘 ↩️`,
+            },
+          },
+        ],
+        channel: channel_id,
+      });
+    });
     (async () => {
       await app.start(3000);
       console.log("Waiting Approval reaction.....");

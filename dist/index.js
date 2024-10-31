@@ -40,13 +40,13 @@ const token = process.env.SLACK_BOT_TOKEN || "";
 const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
 const slackAppToken = process.env.SLACK_APP_TOKEN || "";
 const channel_id = process.env.SLACK_CHANNEL_ID || "";
+const baseMessageTs = core.getInput("baseMessageTs");
 const approvers = (_a = core
     .getInput("approvers", { required: true, trimWhitespace: true })) === null || _a === void 0 ? void 0 : _a.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
-const baseMessageTitle = core.getInput("baseMessageTitle");
-const pendingMessageBody = core.getInput("pendingMessageBody");
-const successMessageBody = core.getInput("successMessageBody");
-const failMessageBody = core.getInput("failMessageBody");
+const baseMessageBlocks = JSON.parse(core.getMultilineInput("baseMessageBlocks").join("\n"));
+const successMessageBlocks = JSON.parse(core.getMultilineInput("successMessageBlocks").join("\n"));
+const failMessageBlocks = JSON.parse(core.getMultilineInput("failMessageBlocks").join("\n"));
 const app = new bolt_1.App({
     token: token,
     signingSecret: signingSecret,
@@ -59,6 +59,9 @@ if (minimumApprovalCount > approvers.length) {
     console.error("Error: Insufficient approvers. Minimum required approvers not met.");
     process.exit(1);
 }
+function hasBlocks(inputs) {
+    return inputs.length > 0;
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -70,23 +73,47 @@ function run() {
             const run_attempt = process.env.GITHUB_RUN_ATTEMPT || "";
             const workflow = process.env.GITHUB_WORKFLOW || "";
             const aid = `${github_repos}-${workflow}-${run_id}-${run_number}-${run_attempt}`;
-            // const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
-            const mainTitleBlock = {
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: baseMessageTitle,
-                },
-            };
-            const renderMessageBody = ({ messageBody }) => {
-                return {
+            const runnerOS = process.env.RUNNER_OS || "";
+            const actor = process.env.GITHUB_ACTOR || "";
+            const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
+            const defaultMainMessageBlocks = [
+                {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: messageBody,
+                        text: `GitHub Actions Approval Request`,
                     },
-                };
-            };
+                },
+                {
+                    type: "section",
+                    fields: [
+                        {
+                            type: "mrkdwn",
+                            text: `*GitHub Actor:*\n${actor}`,
+                        },
+                        {
+                            type: "mrkdwn",
+                            text: `*Repos:*\n${github_server_url}/${github_repos}`,
+                        },
+                        {
+                            type: "mrkdwn",
+                            text: `*Actions URL:*\n${actionsUrl}`,
+                        },
+                        {
+                            type: "mrkdwn",
+                            text: `*GITHUB_RUN_ID:*\n${run_id}`,
+                        },
+                        {
+                            type: "mrkdwn",
+                            text: `*Workflow:*\n${workflow}`,
+                        },
+                        {
+                            type: "mrkdwn",
+                            text: `*RunnerOS:*\n${runnerOS}`,
+                        },
+                    ],
+                },
+            ];
             const renderReplyTitle = () => {
                 return {
                     type: "section",
@@ -132,7 +159,7 @@ function run() {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `Approved :white_check_mark:`,
+                        text: `Approved ✅`,
                     },
                 };
             };
@@ -147,14 +174,20 @@ function run() {
                 }
                 return "approved";
             }
-            const mainMessage = yield web.chat.postMessage({
-                channel: channel_id,
-                text: baseMessageTitle,
-                blocks: [
-                    mainTitleBlock,
-                    renderMessageBody({ messageBody: pendingMessageBody }),
-                ],
-            });
+            const mainMessage = baseMessageTs
+                ? yield web.chat.update({
+                    channel: channel_id,
+                    ts: baseMessageTs,
+                    blocks: hasBlocks(baseMessageBlocks)
+                        ? baseMessageBlocks
+                        : defaultMainMessageBlocks,
+                })
+                : yield web.chat.postMessage({
+                    channel: channel_id,
+                    blocks: hasBlocks(baseMessageBlocks)
+                        ? baseMessageBlocks
+                        : defaultMainMessageBlocks,
+                });
             const replyMessage = yield web.chat.postMessage({
                 channel: channel_id,
                 thread_ts: mainMessage.ts,
@@ -183,7 +216,9 @@ function run() {
                                     type: "section",
                                     text: {
                                         type: "mrkdwn",
-                                        text: successMessageBody,
+                                        text: hasBlocks(successMessageBlocks)
+                                            ? successMessageBlocks
+                                            : defaultMainMessageBlocks,
                                     },
                                 },
                             ],
@@ -218,16 +253,15 @@ function run() {
                         type: "section",
                         text: {
                             type: "mrkdwn",
-                            text: `Rejected by <@${body.user.id}> :x:`,
+                            text: `Rejected by <@${body.user.id}> ❌`,
                         },
                     });
                     yield client.chat.update({
                         ts: mainMessage.ts || "",
                         channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
-                        blocks: [
-                            mainTitleBlock,
-                            renderMessageBody({ messageBody: failMessageBody }),
-                        ],
+                        blocks: hasBlocks(failMessageBlocks)
+                            ? failMessageBlocks
+                            : defaultMainMessageBlocks,
                     });
                     yield client.chat.update({
                         channel: ((_e = body.channel) === null || _e === void 0 ? void 0 : _e.id) || "",
@@ -240,6 +274,27 @@ function run() {
                 }
                 process.exit(1);
             }));
+            process.on("SIGTERM", () => {
+                web.chat.update({
+                    ts: mainMessage.ts,
+                    blocks: failMessageBlocks,
+                    channel: channel_id,
+                    attachments: [],
+                });
+                web.chat.update({
+                    ts: replyMessage.ts,
+                    blocks: [
+                        {
+                            type: "section",
+                            text: {
+                                type: "mrkdwn",
+                                text: `Canceled 🔘 ↩️`,
+                            },
+                        },
+                    ],
+                    channel: channel_id,
+                });
+            });
             (() => __awaiter(this, void 0, void 0, function* () {
                 yield app.start(3000);
                 console.log("Waiting Approval reaction.....");

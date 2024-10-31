@@ -1,5 +1,5 @@
 {
-  "name": "slack-approval",
+  "name": "@tigerwest/slack-approval",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
