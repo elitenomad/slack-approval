@@ -205,6 +205,7 @@ async function run(): Promise<void> {
             hasBlocks(defaultMainMessageBlocks),
             defaultMainMessageBlocks
           );
+          console.log(hasBlocks(baseMessageBlocks), baseMessageBlocks);
           if (approveResult === "approved") {
             await client.chat.update({
               ts: mainMessage.ts || "",

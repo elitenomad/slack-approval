@@ -212,6 +212,7 @@ function run() {
                     console.log(hasBlocks(successMessageBlocks), successMessageBlocks);
                     console.log(hasBlocks(failMessageBlocks), failMessageBlocks);
                     console.log(hasBlocks(defaultMainMessageBlocks), defaultMainMessageBlocks);
+                    console.log(hasBlocks(baseMessageBlocks), baseMessageBlocks);
                     if (approveResult === "approved") {
                         yield client.chat.update({
                             ts: mainMessage.ts || "",
