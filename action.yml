@@ -20,17 +20,17 @@ inputs:
     required: false
     default: "1"
   baseMessageBlocks:
-    description: "The title of the message indicating approval is needed"
+    description: "The base message blocks to display. If not set, will use default message from README. To customize, provide Slack message blocks JSON"
     required: false
     default: |
       []
   successMessageBlocks:
-    description: "The message body indicating approval is pending"
+    description: "The message body indicating approval is success. If not set, will use baseMessageBlocks."
     required: false
     default: |
       []
   failMessageBlocks:
-    description: "The message body indicating approval has been rejected"
+    description: "The message body indicating approval is fail. If not set, will use baseMessageBlocks."
     required: false
     default: |
       []

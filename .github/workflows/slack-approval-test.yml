@@ -31,9 +31,13 @@ jobs:
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         with:
-          approvers: U07U2EYRBGD
+          approvers: U07U2EYRBGD,user2
           minimumApprovalCount: 1
           baseMessageBlocks: |
+            []
+          successMessageBlocks: |
+            []
+          failMessageBlocks: |
             []
 
         timeout-minutes: 60

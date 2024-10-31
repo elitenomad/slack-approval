@@ -58,7 +58,7 @@ custom action to send approval request to Slack
 }
 ```
 
-```
+```yaml
 jobs:
   approval:
     runs-on: ubuntu-latest
@@ -71,9 +71,18 @@ jobs:
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         timeout-minutes: 10
+        with:
+            approvers: user1,user2
+            minimumApprovalCount: 2
+            baseMessageBlocks: |
+              []
+            successMessageBlocks: |
+              []
+            failMessageBlocks: |
+              []
 ```
 
-- Set environment variables
+## Set environment variables
 
   - `SLACK_APP_TOKEN`
 
@@ -91,7 +100,7 @@ jobs:
 
     - Channel ID for which you want to send approval.
 
-- Set Inputs
+## Set Inputs
 
   - `baseMessageTs`
     - If provided, updates the target message. If not provided, creates a new message
@@ -106,19 +115,19 @@ jobs:
     - Optional (default: "1")
 
   - `baseMessageBlocks`
-    - The title of the message indicating approval is needed
+    - The base message blocks to display. If not set, will use default message from README. To customize, provide Slack message blocks JSON
     - Optional (default: "[]")
 
   - `successMessageBlocks`
-    - The message body indicating approval is pending
+    - The message body indicating approval is success. If not set, will use baseMessageBlocks.
     - Optional (default: "[]")
 
   - `failMessageBlocks`
-    - The message body indicating approval has been rejected
+    - The message body indicating approval is fail. If not set, will use baseMessageBlocks.
     - Optional (default: "[]")
 
 
-- outputs
+## outputs
 
 - `mainMessageTs`
   - Timestamp of the main message sent to Slack
