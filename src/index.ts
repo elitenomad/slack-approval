@@ -188,7 +188,9 @@ async function run(): Promise<void> {
     async function cancelHandler() {
       await web.chat.update({
         ts: mainMessage.ts!,
-        blocks: failMessageBlocks,
+        blocks: hasBlocks(failMessageBlocks)
+          ? failMessageBlocks
+          : mainMessageBlocks,
         channel: channel_id,
         text: "",
       });

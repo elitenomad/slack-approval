@@ -200,7 +200,9 @@ function run() {
                 return __awaiter(this, void 0, void 0, function* () {
                     yield web.chat.update({
                         ts: mainMessage.ts,
-                        blocks: failMessageBlocks,
+                        blocks: hasBlocks(failMessageBlocks)
+                            ? failMessageBlocks
+                            : mainMessageBlocks,
                         channel: channel_id,
                         text: "",
                     });
