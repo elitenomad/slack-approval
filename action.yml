@@ -1,12 +1,12 @@
 name: tigerwest/slack-approval
-description: Custom action to send approval request to Slack from GitHub Actions
+description: Custom action to send approval request to Slack from GitHub Actions, allowing only specified approvers and offering extensive customization options
 author: Beom
 runs:
   using: "node20"
   main: "dist/index.js"
 branding:
-  icon: plus
-  color: green
+  icon: check-circle
+  color: orange
 
 inputs:
   baseMessageTs:
