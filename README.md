@@ -58,7 +58,7 @@ custom action to send approval request to Slack
 }
 ```
 
-- and set workflow step
+- set workflow step
 ```yaml
 jobs:
   approval:
