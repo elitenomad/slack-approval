@@ -11,9 +11,11 @@ const approvers = core
   .getInput("approvers", { required: true, trimWhitespace: true })
   ?.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
+console.log(core.getMultilineInput("baseMessageBlocks"));
 const baseMessageBlocks = JSON.parse(
   core.getMultilineInput("baseMessageBlocks").join("\n")
 );
+
 const successMessageBlocks = JSON.parse(
   core.getMultilineInput("successMessageBlocks").join("\n")
 );
