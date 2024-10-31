@@ -41,10 +41,11 @@ const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
 const slackAppToken = process.env.SLACK_APP_TOKEN || "";
 const channel_id = process.env.SLACK_CHANNEL_ID || "";
 const baseMessageTs = core.getInput("baseMessageTs");
-const approvers = (_a = core
+const requiredApprovers = (_a = core
     .getInput("approvers", { required: true, trimWhitespace: true })) === null || _a === void 0 ? void 0 : _a.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
 const baseMessageBlocks = JSON.parse(core.getMultilineInput("baseMessageBlocks").join(""));
+const approvers = [];
 const successMessageBlocks = JSON.parse(core.getMultilineInput("successMessageBlocks").join(""));
 const failMessageBlocks = JSON.parse(core.getMultilineInput("failMessageBlocks").join(""));
 const app = new bolt_1.App({
@@ -55,7 +56,7 @@ const app = new bolt_1.App({
     port: 3000,
     logLevel: bolt_1.LogLevel.DEBUG,
 });
-if (minimumApprovalCount > approvers.length) {
+if (minimumApprovalCount > requiredApprovers.length) {
     console.error("Error: Insufficient approvers. Minimum required approvers not met.");
     process.exit(1);
 }
@@ -121,14 +122,15 @@ function run() {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `*Required Approvers Count:* ${minimumApprovalCount}\n*Remaining Approvers:* ${approvers
+                        text: `*Required Approvers Count:* ${minimumApprovalCount}\n*Remaining Approvers:* ${requiredApprovers
                             .map((v) => `<@${v}>`)
-                            .join(", ")}`,
+                            .join(", ")}\n
+            Approvers:${approvers.map((v) => `<@${v}>`).join(", ")}\n`,
                     },
                 };
             };
             const renderReplyBody = () => {
-                if (approvers.length > 0) {
+                if (minimumApprovalCount > approvers.length) {
                     return {
                         type: "actions",
                         elements: [
@@ -166,12 +168,13 @@ function run() {
                 };
             };
             function approve(userId) {
-                const idx = approvers.findIndex((user) => user === userId);
+                const idx = requiredApprovers.findIndex((user) => user === userId);
                 if (idx === -1) {
                     return "notApproval";
                 }
-                approvers.splice(idx, 1);
-                if (approvers.length > 0) {
+                requiredApprovers.splice(idx, 1);
+                approvers.push(userId);
+                if (approvers.length < minimumApprovalCount) {
                     return "remainApproval";
                 }
                 return "approved";

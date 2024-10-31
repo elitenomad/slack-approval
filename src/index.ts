@@ -7,13 +7,14 @@ const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
 const slackAppToken = process.env.SLACK_APP_TOKEN || "";
 const channel_id = process.env.SLACK_CHANNEL_ID || "";
 const baseMessageTs = core.getInput("baseMessageTs");
-const approvers = core
+const requiredApprovers = core
   .getInput("approvers", { required: true, trimWhitespace: true })
   ?.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
 const baseMessageBlocks = JSON.parse(
   core.getMultilineInput("baseMessageBlocks").join("")
 );
+const approvers: string[] = [];
 
 const successMessageBlocks = JSON.parse(
   core.getMultilineInput("successMessageBlocks").join("")
@@ -31,7 +32,7 @@ const app = new App({
   logLevel: LogLevel.DEBUG,
 });
 
-if (minimumApprovalCount > approvers.length) {
+if (minimumApprovalCount > requiredApprovers.length) {
   console.error(
     "Error: Insufficient approvers. Minimum required approvers not met."
   );
@@ -101,15 +102,16 @@ async function run(): Promise<void> {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*Required Approvers Count:* ${minimumApprovalCount}\n*Remaining Approvers:* ${approvers
+          text: `*Required Approvers Count:* ${minimumApprovalCount}\n*Remaining Approvers:* ${requiredApprovers
             .map((v) => `<@${v}>`)
-            .join(", ")}`,
+            .join(", ")}\n
+            Approvers:${approvers.map((v) => `<@${v}>`).join(", ")}\n`,
         },
       };
     };
 
     const renderReplyBody = () => {
-      if (approvers.length > 0) {
+      if (minimumApprovalCount > approvers.length) {
         return {
           type: "actions",
           elements: [
@@ -148,13 +150,14 @@ async function run(): Promise<void> {
     };
 
     function approve(userId: string) {
-      const idx = approvers.findIndex((user) => user === userId);
+      const idx = requiredApprovers.findIndex((user) => user === userId);
       if (idx === -1) {
         return "notApproval";
       }
-      approvers.splice(idx, 1);
+      requiredApprovers.splice(idx, 1);
+      approvers.push(userId);
 
-      if (approvers.length > 0) {
+      if (approvers.length < minimumApprovalCount) {
         return "remainApproval";
       }
 
