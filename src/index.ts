@@ -140,7 +140,7 @@ async function run(): Promise<void> {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Approved ✅`,
+          text: `Approved :white_check_mark:`,
         },
       };
     };
@@ -250,7 +250,7 @@ async function run(): Promise<void> {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `Rejected by <@${body.user.id}> ❌`,
+              text: `Rejected by <@${body.user.id}> :x:`,
             },
           });
 
@@ -292,7 +292,7 @@ async function run(): Promise<void> {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `Canceled 🔘 ↩️`,
+              text: `Canceled :radio_button: :leftwards_arrow_with_hook:`,
             },
           },
         ],
