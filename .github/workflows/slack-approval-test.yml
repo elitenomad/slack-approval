@@ -39,7 +39,7 @@ jobs:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": `GitHub Actions Approval Request`,
+                    "text": "GitHub Actions Approval Request"
                   }
               },
               {
@@ -47,12 +47,12 @@ jobs:
                 "fields": [
                   {
                     "type": "mrkdwn",
-                    "text": `*GitHub Actor:*\n ${{github.actor}}`
+                    "text": "*GitHub Actor:*\n ${{github.actor}}"
                   },
                   {
                     "type": "mrkdwn",
-                    "text": `*Repos:*\n${{github.repository}}`
-                  },
+                    "text": "*Repos:*\n${{github.repository}}"
+                  }
                 ]
               }
             ]
