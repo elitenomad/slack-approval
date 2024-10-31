@@ -199,6 +199,8 @@ async function run(): Promise<void> {
         const approveResult = approve(body.user.id);
 
         try {
+          console.log(hasBlocks(successMessageBlocks), successMessageBlocks);
+          console.log(hasBlocks(failMessageBlocks), failMessageBlocks);
           if (approveResult === "approved") {
             await client.chat.update({
               ts: mainMessage.ts || "",

@@ -209,6 +209,8 @@ function run() {
                 }
                 const approveResult = approve(body.user.id);
                 try {
+                    console.log(hasBlocks(successMessageBlocks), successMessageBlocks);
+                    console.log(hasBlocks(failMessageBlocks), failMessageBlocks);
                     if (approveResult === "approved") {
                         yield client.chat.update({
                             ts: mainMessage.ts || "",
