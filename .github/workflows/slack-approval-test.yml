@@ -32,7 +32,7 @@ jobs:
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         with:
           approvers: U07U2EYRBGD,user2
-          minimumApprovalCount: 3
+          minimumApprovalCount: 1
           baseMessageBlocks: |
             []
           successMessageBlocks: |
