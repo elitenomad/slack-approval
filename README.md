@@ -3,22 +3,24 @@
 custom action to send approval request to Slack
 
 
-## triggered
-![](img/approve_at_reply.png | width=300)
-
-## approved
-![](img/approved.png | width=300)
-
-## rejected
-![](img/rejected.png | width=300)
-
-## canceled
-![](img/canceled.png | width=300)
-
+## trigger
+<image src="img/approve_at_reply.png" width="300" height="300" />
 
 - When action is triggered, Post or Update in Slack, a reply message appears simultaneously with "Approve" and "Reject" buttons
+## approve
+<image src="img/approved.png" width="300" height="300" />
+
 - Clicking on "Approve" will execute next steps
-- Clicking on "Reject" will cause workflow to fail
+
+## reject and cancel
+<image src="img/rejected.png" width="300" height="300" />
+<image src="img/canceled.png" width="300" height="50" />
+
+- Clicking on "Reject" or "cancel workflow" will cause workflow to fail and update reply message
+
+
+
+
 
 # How To Use
 
