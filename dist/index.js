@@ -44,10 +44,9 @@ const baseMessageTs = core.getInput("baseMessageTs");
 const approvers = (_a = core
     .getInput("approvers", { required: true, trimWhitespace: true })) === null || _a === void 0 ? void 0 : _a.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
-console.log(core.getMultilineInput("baseMessageBlocks"));
-const baseMessageBlocks = JSON.parse(core.getMultilineInput("baseMessageBlocks").join("\n"));
-const successMessageBlocks = JSON.parse(core.getMultilineInput("successMessageBlocks").join("\n"));
-const failMessageBlocks = JSON.parse(core.getMultilineInput("failMessageBlocks").join("\n"));
+const baseMessageBlocks = JSON.parse(core.getMultilineInput("baseMessageBlocks").join(""));
+const successMessageBlocks = JSON.parse(core.getMultilineInput("successMessageBlocks").join(""));
+const failMessageBlocks = JSON.parse(core.getMultilineInput("failMessageBlocks").join(""));
 const app = new bolt_1.App({
     token: token,
     signingSecret: signingSecret,
