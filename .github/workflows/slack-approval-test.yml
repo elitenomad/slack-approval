@@ -24,6 +24,7 @@ jobs:
           npm install
 
       - name: slack-approval
+        id: approval
         uses: ./
         env:
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
@@ -38,8 +39,14 @@ jobs:
               "text": "base messaage approve reuqest"
             }
           successMessagePayload: |
-            []
+            {
+              "text": "success messaage approve reuqest"
+            }
           failMessagePayload: |
-            []
-
+            {
+              "text": "fail messaage approve reuqest"
+            }
         timeout-minutes: 60
+      - name: output test
+        run: |
+          echo "${{ steps.approval.outputs.mainMessageTs }} ${{steps.approval.outputs.replyMessageTs }}"
