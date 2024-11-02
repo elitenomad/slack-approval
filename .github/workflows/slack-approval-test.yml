@@ -33,11 +33,11 @@ jobs:
         with:
           approvers: U07U2EYRBGD,user2
           minimumApprovalCount: 1
-          baseMessageBlocks: |
+          baseMessagePayload: |
             []
-          successMessageBlocks: |
+          successMessagePayload: |
             []
-          failMessageBlocks: |
+          failMessagePayload: |
             []
 
         timeout-minutes: 60

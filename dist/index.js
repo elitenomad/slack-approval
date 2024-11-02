@@ -44,10 +44,10 @@ const baseMessageTs = core.getInput("baseMessageTs");
 const requiredApprovers = (_a = core
     .getInput("approvers", { required: true, trimWhitespace: true })) === null || _a === void 0 ? void 0 : _a.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
-const baseMessageBlocks = JSON.parse(core.getMultilineInput("baseMessageBlocks").join(""));
+const baseMessagePayload = JSON.parse(core.getMultilineInput("baseMessagePayload").join(""));
 const approvers = [];
-const successMessageBlocks = JSON.parse(core.getMultilineInput("successMessageBlocks").join(""));
-const failMessageBlocks = JSON.parse(core.getMultilineInput("failMessageBlocks").join(""));
+const successMessagePayload = JSON.parse(core.getMultilineInput("successMessagePayload").join(""));
+const failMessagePayload = JSON.parse(core.getMultilineInput("failMessagePayload").join(""));
 const app = new bolt_1.App({
     token: token,
     signingSecret: signingSecret,
@@ -60,8 +60,9 @@ if (minimumApprovalCount > requiredApprovers.length) {
     console.error("Error: Insufficient approvers. Minimum required approvers not met.");
     process.exit(1);
 }
-function hasBlocks(inputs) {
-    return inputs.length > 0;
+function hasPayload(inputs) {
+    var _a, _b;
+    return ((_a = inputs.text) === null || _a === void 0 ? void 0 : _a.length) > 0 || ((_b = inputs.blocks) === null || _b === void 0 ? void 0 : _b.length) > 0;
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -77,46 +78,48 @@ function run() {
             const runnerOS = process.env.RUNNER_OS || "";
             const actor = process.env.GITHUB_ACTOR || "";
             const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
-            const mainMessageBlocks = hasBlocks(baseMessageBlocks)
-                ? baseMessageBlocks
-                : [
-                    {
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: "GitHub Actions Approval Request",
+            const mainMessagePayload = hasPayload(baseMessagePayload)
+                ? baseMessagePayload
+                : {
+                    blocks: [
+                        {
+                            type: "section",
+                            text: {
+                                type: "mrkdwn",
+                                text: "GitHub Actions Approval Request",
+                            },
                         },
-                    },
-                    {
-                        type: "section",
-                        fields: [
-                            {
-                                type: "mrkdwn",
-                                text: `*GitHub Actor:*\n${actor}`,
-                            },
-                            {
-                                type: "mrkdwn",
-                                text: `*Repos:*\n${github_server_url}/${github_repos}`,
-                            },
-                            {
-                                type: "mrkdwn",
-                                text: `*Actions URL:*\n${actionsUrl}`,
-                            },
-                            {
-                                type: "mrkdwn",
-                                text: `*GITHUB_RUN_ID:*\n${run_id}`,
-                            },
-                            {
-                                type: "mrkdwn",
-                                text: `*Workflow:*\n${workflow}`,
-                            },
-                            {
-                                type: "mrkdwn",
-                                text: `*RunnerOS:*\n${runnerOS}`,
-                            },
-                        ],
-                    },
-                ];
+                        {
+                            type: "section",
+                            fields: [
+                                {
+                                    type: "mrkdwn",
+                                    text: `*GitHub Actor:*\n${actor}`,
+                                },
+                                {
+                                    type: "mrkdwn",
+                                    text: `*Repos:*\n${github_server_url}/${github_repos}`,
+                                },
+                                {
+                                    type: "mrkdwn",
+                                    text: `*Actions URL:*\n${actionsUrl}`,
+                                },
+                                {
+                                    type: "mrkdwn",
+                                    text: `*GITHUB_RUN_ID:*\n${run_id}`,
+                                },
+                                {
+                                    type: "mrkdwn",
+                                    text: `*Workflow:*\n${workflow}`,
+                                },
+                                {
+                                    type: "mrkdwn",
+                                    text: `*RunnerOS:*\n${runnerOS}`,
+                                },
+                            ],
+                        },
+                    ],
+                };
             const renderReplyTitle = () => {
                 return {
                     type: "section",
@@ -181,17 +184,8 @@ function run() {
                 return "approved";
             }
             const mainMessage = baseMessageTs
-                ? yield web.chat.update({
-                    channel: channel_id,
-                    ts: baseMessageTs,
-                    text: "",
-                    blocks: mainMessageBlocks,
-                })
-                : yield web.chat.postMessage({
-                    channel: channel_id,
-                    text: "",
-                    blocks: mainMessageBlocks,
-                });
+                ? yield web.chat.update(Object.assign({ channel: channel_id, ts: baseMessageTs }, mainMessagePayload))
+                : yield web.chat.postMessage(Object.assign({ channel: channel_id }, mainMessagePayload));
             const replyMessage = yield web.chat.postMessage({
                 channel: channel_id,
                 thread_ts: mainMessage.ts,
@@ -202,14 +196,9 @@ function run() {
             core.setOutput("replyMessageTs", replyMessage.ts);
             function cancelHandler() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    yield web.chat.update({
-                        ts: mainMessage.ts,
-                        blocks: hasBlocks(failMessageBlocks)
-                            ? failMessageBlocks
-                            : mainMessageBlocks,
-                        channel: channel_id,
-                        text: "",
-                    });
+                    yield web.chat.update(Object.assign({ ts: mainMessage.ts, channel: channel_id }, (hasPayload(failMessagePayload)
+                        ? failMessagePayload
+                        : mainMessagePayload)));
                     yield web.chat.update({
                         ts: replyMessage.ts,
                         text: "",
@@ -242,14 +231,9 @@ function run() {
                 const approveResult = approve(body.user.id);
                 try {
                     if (approveResult === "approved") {
-                        yield client.chat.update({
-                            ts: mainMessage.ts || "",
-                            channel: ((_a = body.channel) === null || _a === void 0 ? void 0 : _a.id) || "",
-                            text: "",
-                            blocks: hasBlocks(successMessageBlocks)
-                                ? successMessageBlocks
-                                : mainMessageBlocks,
-                        });
+                        yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_a = body.channel) === null || _a === void 0 ? void 0 : _a.id) || "" }, (hasPayload(successMessagePayload)
+                            ? successMessagePayload
+                            : mainMessagePayload)));
                     }
                     yield client.chat.update({
                         channel: ((_b = body.channel) === null || _b === void 0 ? void 0 : _b.id) || "",
@@ -284,14 +268,9 @@ function run() {
                             text: `Rejected by <@${body.user.id}> :x:`,
                         },
                     });
-                    yield client.chat.update({
-                        ts: mainMessage.ts || "",
-                        channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
-                        text: "",
-                        blocks: hasBlocks(failMessageBlocks)
-                            ? failMessageBlocks
-                            : mainMessageBlocks,
-                    });
+                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "" }, (hasPayload(failMessagePayload)
+                        ? failMessagePayload
+                        : mainMessagePayload)));
                     yield client.chat.update({
                         channel: ((_e = body.channel) === null || _e === void 0 ? void 0 : _e.id) || "",
                         ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",

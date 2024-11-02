@@ -19,21 +19,21 @@ inputs:
     description: "The minimum number of approvals required"
     required: false
     default: "1"
-  baseMessageBlocks:
-    description: "The base message blocks to display. If not set, will use default message from README. To customize, provide Slack message blocks JSON"
+  baseMessagePayload:
+    description: "The base message payload to display. If not set, will use default message from README. To customize, provide Slack message payload JSON"
     required: false
     default: |
-      []
-  successMessageBlocks:
-    description: "The message body indicating approval is success. If not set, will use baseMessageBlocks."
+      {}
+  successMessagePayload:
+    description: "The message body indicating approval is success. If not set, will use baseMessagePayload."
     required: false
     default: |
-      []
-  failMessageBlocks:
-    description: "The message body indicating approval is fail. If not set, will use baseMessageBlocks."
+      {}
+  failMessagePayload:
+    description: "The message body indicating approval is fail. If not set, will use baseMessagePayload."
     required: false
     default: |
-      []
+      {}
 
 outputs:
   mainMessageTs:

@@ -75,12 +75,12 @@ jobs:
         with:
             approvers: user1,user2
             minimumApprovalCount: 2
-            baseMessageBlocks: |
-              []
-            successMessageBlocks: |
-              []
-            failMessageBlocks: |
-              []
+            baseMessagePayload: |
+              {}
+            successMessagePayload: |
+              {}
+            failMessagePayload: |
+              {}
 ```
 
 ## Set environment variables
@@ -115,16 +115,16 @@ jobs:
     - The minimum number of approvals required
     - Optional (default: "1")
 
-  - `baseMessageBlocks`
-    - The base message blocks to display. If not set, will use default message from README. To customize, provide Slack message blocks JSON
+  - `baseMessagePayload`
+    - The base message payload to display. If not set, will use default message from README. To customize, provide Slack message payload JSON
     - Optional (default: "[]")
 
-  - `successMessageBlocks`
-    - The message body indicating approval is success. If not set, will use baseMessageBlocks.
+  - `successMessagePayload`
+    - The message body indicating approval is success. If not set, will use baseMessagePayload.
     - Optional (default: "[]")
 
-  - `failMessageBlocks`
-    - The message body indicating approval is fail. If not set, will use baseMessageBlocks.
+  - `failMessagePayload`
+    - The message body indicating approval is fail. If not set, will use baseMessagePayload.
     - Optional (default: "[]")
 
 

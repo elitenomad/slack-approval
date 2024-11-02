@@ -11,16 +11,16 @@ const requiredApprovers = core
   .getInput("approvers", { required: true, trimWhitespace: true })
   ?.split(",");
 const minimumApprovalCount = Number(core.getInput("minimumApprovalCount")) || 1;
-const baseMessageBlocks = JSON.parse(
-  core.getMultilineInput("baseMessageBlocks").join("")
+const baseMessagePayload = JSON.parse(
+  core.getMultilineInput("baseMessagePayload").join("")
 );
 const approvers: string[] = [];
 
-const successMessageBlocks = JSON.parse(
-  core.getMultilineInput("successMessageBlocks").join("")
+const successMessagePayload = JSON.parse(
+  core.getMultilineInput("successMessagePayload").join("")
 );
-const failMessageBlocks = JSON.parse(
-  core.getMultilineInput("failMessageBlocks").join("")
+const failMessagePayload = JSON.parse(
+  core.getMultilineInput("failMessagePayload").join("")
 );
 
 const app = new App({
@@ -38,8 +38,8 @@ if (minimumApprovalCount > requiredApprovers.length) {
   );
   process.exit(1);
 }
-function hasBlocks(inputs: any) {
-  return inputs.length > 0;
+function hasPayload(inputs: any) {
+  return inputs.text?.length > 0 || inputs.blocks?.length > 0;
 }
 
 async function run(): Promise<void> {
@@ -56,46 +56,48 @@ async function run(): Promise<void> {
     const runnerOS = process.env.RUNNER_OS || "";
     const actor = process.env.GITHUB_ACTOR || "";
     const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
-    const mainMessageBlocks = hasBlocks(baseMessageBlocks)
-      ? baseMessageBlocks
-      : [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "GitHub Actions Approval Request",
+    const mainMessagePayload = hasPayload(baseMessagePayload)
+      ? baseMessagePayload
+      : {
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "GitHub Actions Approval Request",
+              },
             },
-          },
-          {
-            type: "section",
-            fields: [
-              {
-                type: "mrkdwn",
-                text: `*GitHub Actor:*\n${actor}`,
-              },
-              {
-                type: "mrkdwn",
-                text: `*Repos:*\n${github_server_url}/${github_repos}`,
-              },
-              {
-                type: "mrkdwn",
-                text: `*Actions URL:*\n${actionsUrl}`,
-              },
-              {
-                type: "mrkdwn",
-                text: `*GITHUB_RUN_ID:*\n${run_id}`,
-              },
-              {
-                type: "mrkdwn",
-                text: `*Workflow:*\n${workflow}`,
-              },
-              {
-                type: "mrkdwn",
-                text: `*RunnerOS:*\n${runnerOS}`,
-              },
-            ],
-          },
-        ];
+            {
+              type: "section",
+              fields: [
+                {
+                  type: "mrkdwn",
+                  text: `*GitHub Actor:*\n${actor}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Repos:*\n${github_server_url}/${github_repos}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Actions URL:*\n${actionsUrl}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*GITHUB_RUN_ID:*\n${run_id}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Workflow:*\n${workflow}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*RunnerOS:*\n${runnerOS}`,
+                },
+              ],
+            },
+          ],
+        };
 
     const renderReplyTitle = () => {
       return {
@@ -171,14 +173,11 @@ async function run(): Promise<void> {
       ? await web.chat.update({
           channel: channel_id,
           ts: baseMessageTs,
-          text: "",
-          blocks: mainMessageBlocks,
+          ...mainMessagePayload,
         })
       : await web.chat.postMessage({
           channel: channel_id,
-          text: "",
-
-          blocks: mainMessageBlocks,
+          ...mainMessagePayload,
         });
 
     const replyMessage = await web.chat.postMessage({
@@ -194,11 +193,10 @@ async function run(): Promise<void> {
     async function cancelHandler() {
       await web.chat.update({
         ts: mainMessage.ts!,
-        blocks: hasBlocks(failMessageBlocks)
-          ? failMessageBlocks
-          : mainMessageBlocks,
         channel: channel_id,
-        text: "",
+        ...(hasPayload(failMessagePayload)
+          ? failMessagePayload
+          : mainMessagePayload),
       });
       await web.chat.update({
         ts: replyMessage.ts!,
@@ -238,10 +236,9 @@ async function run(): Promise<void> {
             await client.chat.update({
               ts: mainMessage.ts || "",
               channel: body.channel?.id || "",
-              text: "",
-              blocks: hasBlocks(successMessageBlocks)
-                ? successMessageBlocks
-                : mainMessageBlocks,
+              ...(hasPayload(successMessagePayload)
+                ? successMessagePayload
+                : mainMessagePayload),
             });
           }
           await client.chat.update({
@@ -284,10 +281,9 @@ async function run(): Promise<void> {
           await client.chat.update({
             ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
-            text: "",
-            blocks: hasBlocks(failMessageBlocks)
-              ? failMessageBlocks
-              : mainMessageBlocks,
+            ...(hasPayload(failMessagePayload)
+              ? failMessagePayload
+              : mainMessagePayload),
           });
 
           await client.chat.update({
