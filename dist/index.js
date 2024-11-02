@@ -198,8 +198,8 @@ function run() {
                 text: "",
                 blocks: [renderReplyTitle(), renderReplyBody()],
             });
-            core.exportVariable("mainMessageTs", mainMessage.ts);
-            core.exportVariable("replyMessageTs", replyMessage.ts);
+            core.setOutput("mainMessageTs", mainMessage.ts);
+            core.setOutput("replyMessageTs", replyMessage.ts);
             function cancelHandler() {
                 return __awaiter(this, void 0, void 0, function* () {
                     yield web.chat.update({

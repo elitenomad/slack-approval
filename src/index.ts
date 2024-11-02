@@ -188,8 +188,8 @@ async function run(): Promise<void> {
       blocks: [renderReplyTitle(), renderReplyBody()],
     });
 
-    core.exportVariable("mainMessageTs", mainMessage.ts);
-    core.exportVariable("replyMessageTs", replyMessage.ts);
+    core.setOutput("mainMessageTs", mainMessage.ts);
+    core.setOutput("replyMessageTs", replyMessage.ts);
 
     async function cancelHandler() {
       await web.chat.update({
