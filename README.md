@@ -117,15 +117,15 @@ jobs:
 
   - `baseMessagePayload`
     - The base message payload to display. If not set, will use default message from README. To customize, provide Slack message payload JSON
-    - Optional (default: "[]")
+    - Optional (default: "{}")
 
   - `successMessagePayload`
     - The message body indicating approval is success. If not set, will use baseMessagePayload.
-    - Optional (default: "[]")
+    - Optional (default: "{}")
 
   - `failMessagePayload`
     - The message body indicating approval is fail. If not set, will use baseMessagePayload.
-    - Optional (default: "[]")
+    - Optional (default: "{}")
 
 
 ## outputs
