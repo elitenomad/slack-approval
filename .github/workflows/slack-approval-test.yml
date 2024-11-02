@@ -34,7 +34,9 @@ jobs:
           approvers: U07U2EYRBGD,user2
           minimumApprovalCount: 1
           baseMessagePayload: |
-            []
+            {
+              "text": "base messaage approve reuqest"
+            }
           successMessagePayload: |
             []
           failMessagePayload: |
