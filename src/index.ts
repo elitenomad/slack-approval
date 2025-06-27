@@ -280,13 +280,6 @@ async function run(): Promise<void> {
                   : mainMessagePayload),
               });
               
-              // Send confirmation to the approver
-              await client.chat.postEphemeral({
-                channel: channelId || "",
-                user: userId,
-                text: `✅ You approved the request. All required approvals have been received!`,
-              });
-              
             } else if (approveResult === "remainApproval") {
               logger.info(`Partial approval by ${userName}. ${minimumApprovalCount - approvers.length} more approvals needed.`);
               
@@ -299,13 +292,6 @@ async function run(): Promise<void> {
                   renderApprovalStatus(),
                   renderApprovalButtons(),
                 ],
-              });
-              
-              // Send confirmation to the approver
-              await client.chat.postEphemeral({
-                channel: channelId || "",
-                user: userId,
-                text: `✅ You approved the request. ${minimumApprovalCount - approvers.length} more approval(s) needed.`,
               });
               
             } else {
@@ -425,13 +411,6 @@ async function run(): Promise<void> {
                   },
                 ],
               }),
-            });
-            
-            // Send confirmation to the rejector
-            await client.chat.postEphemeral({
-              channel: channelId || "",
-              user: userId,
-              text: `❌ You rejected the request. The approval process has been cancelled.`,
             });
             
           } catch (updateError) {

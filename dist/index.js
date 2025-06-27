@@ -255,12 +255,6 @@ function run() {
                             yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: channelId || "" }, (hasPayload(successMessagePayload)
                                 ? successMessagePayload
                                 : mainMessagePayload)));
-                            // Send confirmation to the approver
-                            yield client.chat.postEphemeral({
-                                channel: channelId || "",
-                                user: userId,
-                                text: `✅ You approved the request. All required approvals have been received!`,
-                            });
                         }
                         else if (approveResult === "remainApproval") {
                             logger.info(`Partial approval by ${userName}. ${minimumApprovalCount - approvers.length} more approvals needed.`);
@@ -273,12 +267,6 @@ function run() {
                                     renderApprovalStatus(),
                                     renderApprovalButtons(),
                                 ],
-                            });
-                            // Send confirmation to the approver
-                            yield client.chat.postEphemeral({
-                                channel: channelId || "",
-                                user: userId,
-                                text: `✅ You approved the request. ${minimumApprovalCount - approvers.length} more approval(s) needed.`,
                             });
                         }
                         else {
@@ -379,12 +367,6 @@ function run() {
                                 },
                             ],
                         })));
-                        // Send confirmation to the rejector
-                        yield client.chat.postEphemeral({
-                            channel: channelId || "",
-                            user: userId,
-                            text: `❌ You rejected the request. The approval process has been cancelled.`,
-                        });
                     }
                     catch (updateError) {
                         logger.error(`Failed to update message with rejection: ${updateError}`);
