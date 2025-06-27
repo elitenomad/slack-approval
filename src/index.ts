@@ -257,29 +257,29 @@ async function run(): Promise<void> {
         }
         
         try {
-          // await client.chat.update({
-          //   ts: mainMessage.ts || "",
-          //   channel: body.channel?.id || "",
-          //   ...(hasPayload(failMessagePayload)
-          //     ? failMessagePayload
-          //     : mainMessagePayload),
-          // });
-
           await client.chat.update({
+            ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
-            ts: mainMessage?.ts || "",
-            text: "",
-            blocks: [
-              ...mainMessagePayload.blocks.slice(0, -2),
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `Rejected by <@${body.user.id}> :x:`,
-                },
-              },
-            ],
+            ...(hasPayload(failMessagePayload)
+              ? failMessagePayload
+              : mainMessagePayload),
           });
+
+          // await client.chat.update({
+          //   channel: body.channel?.id || "",
+          //   ts: mainMessage?.ts || "",
+          //   text: "",
+          //   blocks: [
+          //     ...mainMessagePayload.blocks.slice(0, -2),
+          //     {
+          //       type: "section",
+          //       text: {
+          //         type: "mrkdwn",
+          //         text: `Rejected by <@${body.user.id}> :x:`,
+          //       },
+          //     },
+          //   ],
+          // });
         } catch (error) {
           logger.error(error);
         }
