@@ -25,7 +25,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-          UNIQUE_STEP_ID: "1234567890"
+          UNIQUE_STEP_ID: "one"
         with:
           approvers: U037V34NTGS
           minimumApprovalCount: 1
@@ -121,3 +121,328 @@ jobs:
         run: |
           echo "Main Message Timestamp: ${{ steps.approval.outputs.mainMessageTs }}"
           echo "Testing completed - check Slack for the single message with embedded buttons"
+
+  security-approval:
+    runs-on: ubuntu-latest
+    needs: approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - run: |
+          npm install
+
+      - name: slack-approval
+        id: security-approval
+        uses: ./
+        env:
+          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          UNIQUE_STEP_ID: "security"
+        with:
+          approvers: U037V34NTGS
+          minimumApprovalCount: 1
+          baseMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🔒 Security Review Required*\n\nSecurity team approval needed for production deployment."
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n`${{ github.ref_name }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n`${{ github.sha }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Security Checklist:*\n• Code security scan passed\n• Dependency vulnerabilities checked\n• Access controls reviewed"
+                  }
+                }
+              ]
+            }
+          successMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Security Approval Granted!*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Security review completed successfully. Proceeding to next stage."
+                  }
+                }
+              ]
+            }
+          failMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ *Security Approval Denied*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Security review failed. Deployment blocked."
+                  }
+                }
+              ]
+            }
+        timeout-minutes: 10
+
+  qa-approval:
+    runs-on: ubuntu-latest
+    needs: security-approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - run: |
+          npm install
+
+      - name: slack-approval
+        id: qa-approval
+        uses: ./
+        env:
+          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          UNIQUE_STEP_ID: "qa"
+        with:
+          approvers: U037V34NTGS
+          minimumApprovalCount: 1
+          baseMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🧪 QA Testing Approval Required*\n\nQA team approval needed for production deployment."
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n`${{ github.ref_name }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n`${{ github.sha }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*QA Checklist:*\n• Functional testing completed\n• Regression testing passed\n• Performance testing verified\n• User acceptance testing approved"
+                  }
+                }
+              ]
+            }
+          successMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *QA Approval Granted!*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "QA testing completed successfully. Ready for final deployment approval."
+                  }
+                }
+              ]
+            }
+          failMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ *QA Approval Denied*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "QA testing failed. Deployment blocked."
+                  }
+                }
+              ]
+            }
+        timeout-minutes: 15
+
+  deployment-approval:
+    runs-on: ubuntu-latest
+    needs: qa-approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - run: |
+          npm install
+
+      - name: slack-approval
+        id: deployment-approval
+        uses: ./
+        env:
+          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          UNIQUE_STEP_ID: "deployment"
+        with:
+          approvers: U037V34NTGS
+          minimumApprovalCount: 1
+          baseMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🚀 Final Deployment Approval Required*\n\nFinal approval needed to deploy to production."
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n`${{ github.ref_name }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n`${{ github.sha }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Summary:*\n• Security review: ✅ Approved\n• QA testing: ✅ Approved\n• Ready for production deployment"
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "This is the final approval step before production deployment"
+                    }
+                  ]
+                }
+              ]
+            }
+          successMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Final Approval Granted!*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "All approvals completed. Deploying to production now."
+                  }
+                }
+              ]
+            }
+          failMessagePayload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ *Final Approval Denied*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Final approval denied. Production deployment cancelled."
+                  }
+                }
+              ]
+            }
+        timeout-minutes: 10
+      - name: output test
+        run: |
+          echo "All approval jobs completed successfully"
+          echo "Deployment approval timestamp: ${{ steps.deployment-approval.outputs.mainMessageTs }}"
