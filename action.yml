@@ -1,6 +1,6 @@
-name: tigerwest/slack-approval
+name: elitenomad/slack-approval
 description: Custom action to send approval request to Slack from Github, allowing only specified approvers
-author: Beom
+author: Pranava S Balugari
 runs:
   using: "node20"
   main: "dist/index.js"
@@ -10,11 +10,12 @@ branding:
 
 inputs:
   baseMessageTs:
-    description: target message ts
+    description: "Target message timestamp to update. If not provided, a new message will be posted"
+    required: false
+    default: ""
   approvers:
     description: "A comma-separated list of approvers' slack user ids"
     required: true
-    default: ""
   minimumApprovalCount:
     description: "The minimum number of approvals required"
     required: false
@@ -37,8 +38,13 @@ inputs:
 
 outputs:
   mainMessageTs:
-    description: slack main message ts
-  replyMessageTs:
-    description: slack reply message ts
+    description: "Slack main message timestamp"
+    
+# Environment variables required:
+# SLACK_BOT_TOKEN - Slack bot token for authentication
+# SLACK_SIGNING_SECRET - Slack app signing secret
+# SLACK_APP_TOKEN - Slack app token for socket mode
+# SLACK_CHANNEL_ID - Target Slack channel ID
+# UNIQUE_STEP_ID - Unique identifier for this approval step
   
   

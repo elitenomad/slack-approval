@@ -65,12 +65,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: send approval
-        uses: TigerWest/slack-approval@v1.0.1
+        uses: elitenomad/slack-approval@v1.0.3
         env:
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          UNIQUE_STEP_ID: ${{ github.run_id }}-${{ github.run_number }}
         timeout-minutes: 10
         with:
             approvers: user1,user2
@@ -100,6 +101,10 @@ jobs:
   - `SLACK_CHANNEL_ID`
 
     - Channel ID for which you want to send approval.
+
+  - `UNIQUE_STEP_ID`
+
+    - Unique identifier for this approval step. Recommended to use `${{ github.run_id }}-${{ github.run_number }}` to ensure uniqueness across workflow runs.
 
 ## Set Inputs
 
@@ -132,7 +137,3 @@ jobs:
 
 - `mainMessageTs`
   - Timestamp of the main message sent to Slack
-
-- `replyMessageTs`
-  - Timestamp of the reply message sent to Slack 
-
