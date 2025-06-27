@@ -132,7 +132,7 @@ function run() {
                 };
             };
             const mainMessagePayload = hasPayload(baseMessagePayload)
-                ? Object.assign(Object.assign({}, baseMessagePayload), { blocks: [...baseMessagePayload.blocks, renderApprovalStatus(), renderApprovalButtons()] }) : {
+                ? Object.assign(Object.assign({}, baseMessagePayload), { text: baseMessagePayload.text || "GitHub Actions Approval Request #${unique_step_id}", blocks: [...baseMessagePayload.blocks, renderApprovalStatus(), renderApprovalButtons()] }) : {
                 blocks: [
                     {
                         type: "section",

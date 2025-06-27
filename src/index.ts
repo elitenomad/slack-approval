@@ -117,6 +117,7 @@ async function run(): Promise<void> {
     const mainMessagePayload = hasPayload(baseMessagePayload)
       ? {
           ...baseMessagePayload,
+          text: baseMessagePayload.text || "GitHub Actions Approval Request #${unique_step_id}",
           blocks: [...baseMessagePayload.blocks, renderApprovalStatus(), renderApprovalButtons()]
         }
       : {
