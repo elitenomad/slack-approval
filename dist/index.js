@@ -41,6 +41,7 @@ const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
 const slackAppToken = process.env.SLACK_APP_TOKEN || "";
 const channel_id = process.env.SLACK_CHANNEL_ID || "";
 const unique_step_id = process.env.UNIQUE_STEP_ID || "";
+console.log("unique_step_id", unique_step_id);
 const baseMessageTs = core.getInput("baseMessageTs");
 const requiredApprovers = (_a = core
     .getInput("approvers", { required: true, trimWhitespace: true })) === null || _a === void 0 ? void 0 : _a.split(",");
@@ -93,7 +94,7 @@ function run() {
                 };
             };
             const renderApprovalButtons = () => {
-                if (minimumApprovalCount > approvers.length) {
+                if (minimumApprovalCount >= approvers.length) {
                     return {
                         type: "actions",
                         elements: [
@@ -186,6 +187,8 @@ function run() {
                 }
                 return "approved";
             }
+            console.log("baseMessageTs", baseMessageTs);
+            console.log("mainMessagePayload", mainMessagePayload);
             const mainMessage = baseMessageTs
                 ? yield web.chat.update(Object.assign({ channel: channel_id, ts: baseMessageTs }, mainMessagePayload))
                 : yield web.chat.postMessage(Object.assign({ channel: channel_id }, mainMessagePayload));
