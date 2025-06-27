@@ -124,7 +124,6 @@ jobs:
 
   security-approval:
     runs-on: ubuntu-latest
-    needs: approval
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -228,7 +227,6 @@ jobs:
 
   qa-approval:
     runs-on: ubuntu-latest
-    needs: security-approval
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -329,120 +327,3 @@ jobs:
               ]
             }
         timeout-minutes: 15
-
-  deployment-approval:
-    runs-on: ubuntu-latest
-    needs: qa-approval
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - run: |
-          npm install
-
-      - name: slack-approval
-        id: deployment-approval
-        uses: ./
-        env:
-          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
-          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-          UNIQUE_STEP_ID: "deployment"
-        with:
-          approvers: U037V34NTGS
-          minimumApprovalCount: 1
-          baseMessagePayload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*🚀 Final Deployment Approval Required*\n\nFinal approval needed to deploy to production."
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Repository:*\n${{ github.repository }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Branch:*\n`${{ github.ref_name }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Commit:*\n`${{ github.sha }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Author:*\n${{ github.actor }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment Summary:*\n• Security review: ✅ Approved\n• QA testing: ✅ Approved\n• Ready for production deployment"
-                  }
-                },
-                {
-                  "type": "context",
-                  "elements": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "This is the final approval step before production deployment"
-                    }
-                  ]
-                }
-              ]
-            }
-          successMessagePayload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "✅ *Final Approval Granted!*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "All approvals completed. Deploying to production now."
-                  }
-                }
-              ]
-            }
-          failMessagePayload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "❌ *Final Approval Denied*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Final approval denied. Production deployment cancelled."
-                  }
-                }
-              ]
-            }
-        timeout-minutes: 10
-      - name: output test
-        run: |
-          echo "All approval jobs completed successfully"
-          echo "Deployment approval timestamp: ${{ steps.deployment-approval.outputs.mainMessageTs }}"
