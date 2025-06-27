@@ -32,21 +32,67 @@ jobs:
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         with:
-          approvers: U07U2EYRBGD,user2
+          approvers: U037V34NTGS
           minimumApprovalCount: 1
           baseMessagePayload: |
             {
-              "text": "base messaage approve reuqest"
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🚀 *Testing New Single Message Approval System*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "This is a test of the updated slack-approval action with buttons directly in the main message (no reply thread)."
+                  }
+                }
+              ]
             }
           successMessagePayload: |
             {
-              "text": "success messaage approve reuqest"
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Approval Granted!*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "The workflow has been approved and will continue execution."
+                  }
+                }
+              ]
             }
           failMessagePayload: |
             {
-              "text": "fail messaage approve reuqest"
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ *Approval Denied*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "The workflow has been rejected and will be cancelled."
+                  }
+                }
+              ]
             }
         timeout-minutes: 60
       - name: output test
         run: |
-          echo "${{ steps.approval.outputs.mainMessageTs }} ${{steps.approval.outputs.replyMessageTs }}"
+          echo "Main Message Timestamp: ${{ steps.approval.outputs.mainMessageTs }}"
+          echo "Testing completed - check Slack for the single message with embedded buttons"

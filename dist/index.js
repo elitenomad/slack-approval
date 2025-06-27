@@ -40,6 +40,7 @@ const token = process.env.SLACK_BOT_TOKEN || "";
 const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
 const slackAppToken = process.env.SLACK_APP_TOKEN || "";
 const channel_id = process.env.SLACK_CHANNEL_ID || "";
+const unique_step_id = process.env.UNIQUE_STEP_ID || "";
 const baseMessageTs = core.getInput("baseMessageTs");
 const requiredApprovers = (_a = core
     .getInput("approvers", { required: true, trimWhitespace: true })) === null || _a === void 0 ? void 0 : _a.split(",");
@@ -78,6 +79,57 @@ function run() {
             const runnerOS = process.env.RUNNER_OS || "";
             const actor = process.env.GITHUB_ACTOR || "";
             const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
+            const renderApprovalStatus = () => {
+                return {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*Required Approvers Count:* ${minimumApprovalCount}\n*Remaining Approvers:* ${requiredApprovers
+                            .map((v) => `<@${v}>`)
+                            .join(", ")}\n${approvers.length > 0
+                            ? `Approvers: ${approvers.map((v) => `<@${v}>`).join(", ")} `
+                            : ""}\n`,
+                    },
+                };
+            };
+            const renderApprovalButtons = () => {
+                if (minimumApprovalCount > approvers.length) {
+                    return {
+                        type: "actions",
+                        elements: [
+                            {
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    emoji: true,
+                                    text: "approve",
+                                },
+                                style: "primary",
+                                value: aid,
+                                action_id: `slack-approval-approve-${unique_step_id}`,
+                            },
+                            {
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    emoji: true,
+                                    text: "reject",
+                                },
+                                style: "danger",
+                                value: aid,
+                                action_id: `slack-approval-reject-${unique_step_id}`,
+                            },
+                        ],
+                    };
+                }
+                return {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `Approved :white_check_mark:`,
+                    },
+                };
+            };
             const mainMessagePayload = hasPayload(baseMessagePayload)
                 ? baseMessagePayload
                 : {
@@ -118,59 +170,10 @@ function run() {
                                 },
                             ],
                         },
+                        renderApprovalStatus(),
+                        renderApprovalButtons(),
                     ],
                 };
-            const renderReplyTitle = () => {
-                return {
-                    type: "section",
-                    text: {
-                        type: "mrkdwn",
-                        text: `*Required Approvers Count:* ${minimumApprovalCount}\n*Remaining Approvers:* ${requiredApprovers
-                            .map((v) => `<@${v}>`)
-                            .join(", ")}\n${approvers.length > 0
-                            ? `Approvers: ${approvers.map((v) => `<@${v}>`).join(", ")} `
-                            : ""}\n`,
-                    },
-                };
-            };
-            const renderReplyBody = () => {
-                if (minimumApprovalCount > approvers.length) {
-                    return {
-                        type: "actions",
-                        elements: [
-                            {
-                                type: "button",
-                                text: {
-                                    type: "plain_text",
-                                    emoji: true,
-                                    text: "approve",
-                                },
-                                style: "primary",
-                                value: aid,
-                                action_id: "slack-approval-approve",
-                            },
-                            {
-                                type: "button",
-                                text: {
-                                    type: "plain_text",
-                                    emoji: true,
-                                    text: "reject",
-                                },
-                                style: "danger",
-                                value: aid,
-                                action_id: "slack-approval-reject",
-                            },
-                        ],
-                    };
-                }
-                return {
-                    type: "section",
-                    text: {
-                        type: "mrkdwn",
-                        text: `Approved :white_check_mark:`,
-                    },
-                };
-            };
             function approve(userId) {
                 const idx = requiredApprovers.findIndex((user) => user === userId);
                 if (idx === -1) {
@@ -186,40 +189,19 @@ function run() {
             const mainMessage = baseMessageTs
                 ? yield web.chat.update(Object.assign({ channel: channel_id, ts: baseMessageTs }, mainMessagePayload))
                 : yield web.chat.postMessage(Object.assign({ channel: channel_id }, mainMessagePayload));
-            const replyMessage = yield web.chat.postMessage({
-                channel: channel_id,
-                thread_ts: mainMessage.ts,
-                text: "",
-                blocks: [renderReplyTitle(), renderReplyBody()],
-            });
             core.setOutput("mainMessageTs", mainMessage.ts);
-            core.setOutput("replyMessageTs", replyMessage.ts);
             function cancelHandler() {
                 return __awaiter(this, void 0, void 0, function* () {
                     yield web.chat.update(Object.assign({ ts: mainMessage.ts, channel: channel_id }, (hasPayload(failMessagePayload)
                         ? failMessagePayload
                         : mainMessagePayload)));
-                    yield web.chat.update({
-                        ts: replyMessage.ts,
-                        text: "",
-                        blocks: [
-                            {
-                                type: "section",
-                                text: {
-                                    type: "mrkdwn",
-                                    text: `Canceled :radio_button: :leftwards_arrow_with_hook:`,
-                                },
-                            },
-                        ],
-                        channel: channel_id,
-                    });
                     process.exit(1);
                 });
             }
             process.on("SIGTERM", cancelHandler);
             process.on("SIGINT", cancelHandler);
             process.on("SIGBREAK", cancelHandler);
-            app.action("slack-approval-approve", ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
+            app.action(`slack-approval-approve-${unique_step_id}`, ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b;
                 yield ack();
                 if (action.type !== "button") {
@@ -235,12 +217,18 @@ function run() {
                             ? successMessagePayload
                             : mainMessagePayload)));
                     }
-                    yield client.chat.update({
-                        channel: ((_b = body.channel) === null || _b === void 0 ? void 0 : _b.id) || "",
-                        ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
-                        text: "",
-                        blocks: [renderReplyTitle(), renderReplyBody()],
-                    });
+                    else {
+                        yield client.chat.update({
+                            channel: ((_b = body.channel) === null || _b === void 0 ? void 0 : _b.id) || "",
+                            ts: (mainMessage === null || mainMessage === void 0 ? void 0 : mainMessage.ts) || "",
+                            text: "",
+                            blocks: [
+                                ...mainMessagePayload.blocks.slice(0, -2),
+                                renderApprovalStatus(),
+                                renderApprovalButtons(),
+                            ],
+                        });
+                    }
                 }
                 catch (error) {
                     logger.error(error);
@@ -249,8 +237,8 @@ function run() {
                     process.exit(0);
                 }
             }));
-            app.action("slack-approval-reject", ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
-                var _c, _d, _e;
+            app.action(`slack-approval-reject-${unique_step_id}`, ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
+                var _c, _d;
                 yield ack();
                 if (action.type !== "button") {
                     return;
@@ -259,23 +247,23 @@ function run() {
                     return;
                 }
                 try {
-                    const response_blocks = (_c = body.message) === null || _c === void 0 ? void 0 : _c.blocks;
-                    response_blocks.pop();
-                    response_blocks.push({
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: `Rejected by <@${body.user.id}> :x:`,
-                        },
-                    });
-                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "" }, (hasPayload(failMessagePayload)
+                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "" }, (hasPayload(failMessagePayload)
                         ? failMessagePayload
                         : mainMessagePayload)));
                     yield client.chat.update({
-                        channel: ((_e = body.channel) === null || _e === void 0 ? void 0 : _e.id) || "",
-                        ts: (replyMessage === null || replyMessage === void 0 ? void 0 : replyMessage.ts) || "",
+                        channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
+                        ts: (mainMessage === null || mainMessage === void 0 ? void 0 : mainMessage.ts) || "",
                         text: "",
-                        blocks: response_blocks,
+                        blocks: [
+                            ...mainMessagePayload.blocks.slice(0, -2),
+                            {
+                                type: "section",
+                                text: {
+                                    type: "mrkdwn",
+                                    text: `Rejected by <@${body.user.id}> :x:`,
+                                },
+                            },
+                        ],
                     });
                 }
                 catch (error) {
