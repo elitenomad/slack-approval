@@ -76,7 +76,10 @@ async function run(): Promise<void> {
     };
 
     const renderApprovalButtons = () => {
-      if (minimumApprovalCount >= approvers.length) {
+      const remainingApprovals = minimumApprovalCount - approvers.length;
+      const isFullyApproved = approvers.length >= minimumApprovalCount;
+      
+      if (!isFullyApproved) {
         return {
           type: "actions",
           elements: [
@@ -85,7 +88,7 @@ async function run(): Promise<void> {
               text: {
                 type: "plain_text",
                 emoji: true,
-                text: "approve",
+                text: `✅ Approve (${remainingApprovals} needed)`,
               },
               style: "primary",
               value: aid,
@@ -96,7 +99,7 @@ async function run(): Promise<void> {
               text: {
                 type: "plain_text",
                 emoji: true,
-                text: "reject",
+                text: "❌ Reject",
               },
               style: "danger",
               value: aid,
@@ -105,11 +108,12 @@ async function run(): Promise<void> {
           ],
         };
       }
+      
       return {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Approved :white_check_mark:`,
+          text: `🎉 *Approval Complete!* All ${minimumApprovalCount} required approvals have been received.`,
         },
       };
     };
