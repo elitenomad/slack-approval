@@ -94,7 +94,9 @@ function run() {
                 };
             };
             const renderApprovalButtons = () => {
-                if (minimumApprovalCount >= approvers.length) {
+                const remainingApprovals = minimumApprovalCount - approvers.length;
+                const isFullyApproved = approvers.length >= minimumApprovalCount;
+                if (!isFullyApproved) {
                     return {
                         type: "actions",
                         elements: [
@@ -103,7 +105,7 @@ function run() {
                                 text: {
                                     type: "plain_text",
                                     emoji: true,
-                                    text: "approve",
+                                    text: `✅ Approve (${remainingApprovals} needed)`,
                                 },
                                 style: "primary",
                                 value: aid,
@@ -114,7 +116,7 @@ function run() {
                                 text: {
                                     type: "plain_text",
                                     emoji: true,
-                                    text: "reject",
+                                    text: "❌ Reject",
                                 },
                                 style: "danger",
                                 value: aid,
@@ -127,7 +129,7 @@ function run() {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `Approved :white_check_mark:`,
+                        text: `🎉 *Approval Complete!* All ${minimumApprovalCount} required approvals have been received.`,
                     },
                 };
             };
@@ -200,57 +202,222 @@ function run() {
             process.on("SIGINT", cancelHandler);
             process.on("SIGBREAK", cancelHandler);
             app.action(`slack-approval-approve-${unique_step_id}`, ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b;
-                yield ack();
-                if (action.type !== "button") {
-                    return;
-                }
-                if (action.value !== aid) {
-                    return;
-                }
-                const approveResult = approve(body.user.id);
+                var _a, _b, _c, _d, _e, _f;
                 try {
-                    if (approveResult === "approved") {
-                        yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_a = body.channel) === null || _a === void 0 ? void 0 : _a.id) || "" }, (hasPayload(successMessagePayload)
-                            ? successMessagePayload
-                            : mainMessagePayload)));
+                    yield ack();
+                    // Validate action type
+                    if (action.type !== "button") {
+                        logger.warn(`Invalid action type: ${action.type}`);
+                        return;
                     }
-                    else {
-                        yield client.chat.update({
-                            channel: ((_b = body.channel) === null || _b === void 0 ? void 0 : _b.id) || "",
-                            ts: (mainMessage === null || mainMessage === void 0 ? void 0 : mainMessage.ts) || "",
-                            text: "",
-                            blocks: [
-                                ...mainMessagePayload.blocks.slice(0, -2),
-                                renderApprovalStatus(),
-                                renderApprovalButtons(),
-                            ],
+                    // Validate action value
+                    if (action.value !== aid) {
+                        logger.warn(`Invalid action value: ${action.value}, expected: ${aid}`);
+                        return;
+                    }
+                    const userId = (_a = body.user) === null || _a === void 0 ? void 0 : _a.id;
+                    const userName = ((_b = body.user) === null || _b === void 0 ? void 0 : _b.name) || ((_c = body.user) === null || _c === void 0 ? void 0 : _c.username) || 'Unknown User';
+                    const channelId = (_d = body.channel) === null || _d === void 0 ? void 0 : _d.id;
+                    logger.info(`Approval request from user: ${userName} (${userId}) in channel: ${channelId}`);
+                    // Check if user is authorized to approve
+                    if (!userId) {
+                        logger.error("No user ID found in request body");
+                        return;
+                    }
+                    // Check if user has already approved
+                    if (approvers.includes(userId)) {
+                        logger.info(`User ${userName} (${userId}) has already approved`);
+                        // Send ephemeral message to user
+                        yield client.chat.postEphemeral({
+                            channel: channelId || "",
+                            user: userId,
+                            text: "You have already approved this request.",
                         });
+                        return;
+                    }
+                    // Check if user is in the required approvers list
+                    if (!requiredApprovers.includes(userId)) {
+                        logger.warn(`Unauthorized approval attempt by user: ${userName} (${userId})`);
+                        // Send ephemeral message to user
+                        yield client.chat.postEphemeral({
+                            channel: channelId || "",
+                            user: userId,
+                            text: "You are not authorized to approve this request.",
+                        });
+                        return;
+                    }
+                    const approveResult = approve(userId);
+                    logger.info(`Approval result for ${userName}: ${approveResult}`);
+                    // Update the main message
+                    try {
+                        if (approveResult === "approved") {
+                            logger.info(`Request fully approved by ${userName}. Exiting with success.`);
+                            yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: channelId || "" }, (hasPayload(successMessagePayload)
+                                ? successMessagePayload
+                                : mainMessagePayload)));
+                            // Send confirmation to the approver
+                            yield client.chat.postEphemeral({
+                                channel: channelId || "",
+                                user: userId,
+                                text: `✅ You approved the request. All required approvals have been received!`,
+                            });
+                        }
+                        else if (approveResult === "remainApproval") {
+                            logger.info(`Partial approval by ${userName}. ${minimumApprovalCount - approvers.length} more approvals needed.`);
+                            yield client.chat.update({
+                                channel: channelId || "",
+                                ts: (mainMessage === null || mainMessage === void 0 ? void 0 : mainMessage.ts) || "",
+                                text: "",
+                                blocks: [
+                                    ...mainMessagePayload.blocks.slice(0, -2),
+                                    renderApprovalStatus(),
+                                    renderApprovalButtons(),
+                                ],
+                            });
+                            // Send confirmation to the approver
+                            yield client.chat.postEphemeral({
+                                channel: channelId || "",
+                                user: userId,
+                                text: `✅ You approved the request. ${minimumApprovalCount - approvers.length} more approval(s) needed.`,
+                            });
+                        }
+                        else {
+                            logger.warn(`Unexpected approval result: ${approveResult}`);
+                        }
+                    }
+                    catch (updateError) {
+                        logger.error(`Failed to update message: ${updateError}`);
+                        // Send error notification to user
+                        yield client.chat.postEphemeral({
+                            channel: channelId || "",
+                            user: userId,
+                            text: "❌ Failed to update the approval message. Please try again.",
+                        });
+                    }
+                    // Exit if fully approved
+                    if (approveResult === "approved") {
+                        process.exit(0);
                     }
                 }
                 catch (error) {
-                    logger.error(error);
-                }
-                if (approveResult === "approved") {
-                    process.exit(0);
+                    logger.error(`Error in approval action handler: ${error}`);
+                    // Try to send error notification to user if possible
+                    try {
+                        const userId = (_e = body.user) === null || _e === void 0 ? void 0 : _e.id;
+                        const channelId = (_f = body.channel) === null || _f === void 0 ? void 0 : _f.id;
+                        if (userId && channelId) {
+                            yield client.chat.postEphemeral({
+                                channel: channelId,
+                                user: userId,
+                                text: "❌ An error occurred while processing your approval. Please try again.",
+                            });
+                        }
+                    }
+                    catch (ephemeralError) {
+                        logger.error(`Failed to send error notification: ${ephemeralError}`);
+                    }
                 }
             }));
             app.action(`slack-approval-reject-${unique_step_id}`, ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
-                var _c;
-                yield ack();
-                if (action.type !== "button") {
-                    return;
-                }
-                if (action.value !== aid) {
-                    return;
-                }
+                var _g, _h, _j, _k, _l, _m;
                 try {
-                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "" }, (hasPayload(failMessagePayload) ? failMessagePayload : mainMessagePayload)));
+                    yield ack();
+                    // Validate action type
+                    if (action.type !== "button") {
+                        logger.warn(`Invalid reject action type: ${action.type}`);
+                        return;
+                    }
+                    // Validate action value
+                    if (action.value !== aid) {
+                        logger.warn(`Invalid reject action value: ${action.value}, expected: ${aid}`);
+                        return;
+                    }
+                    const userId = (_g = body.user) === null || _g === void 0 ? void 0 : _g.id;
+                    const userName = ((_h = body.user) === null || _h === void 0 ? void 0 : _h.name) || ((_j = body.user) === null || _j === void 0 ? void 0 : _j.username) || 'Unknown User';
+                    const channelId = (_k = body.channel) === null || _k === void 0 ? void 0 : _k.id;
+                    logger.info(`Rejection request from user: ${userName} (${userId}) in channel: ${channelId}`);
+                    // Check if user ID exists
+                    if (!userId) {
+                        logger.error("No user ID found in reject request body");
+                        return;
+                    }
+                    // Check if user is authorized to reject (anyone in required approvers can reject)
+                    if (!requiredApprovers.includes(userId) && !approvers.includes(userId)) {
+                        logger.warn(`Unauthorized rejection attempt by user: ${userName} (${userId})`);
+                        // Send ephemeral message to user
+                        yield client.chat.postEphemeral({
+                            channel: channelId || "",
+                            user: userId,
+                            text: "You are not authorized to reject this request.",
+                        });
+                        return;
+                    }
+                    // Check if request is already fully approved
+                    if (approvers.length >= minimumApprovalCount) {
+                        logger.info(`Rejection attempt by ${userName} after request was already approved`);
+                        // Send ephemeral message to user
+                        yield client.chat.postEphemeral({
+                            channel: channelId || "",
+                            user: userId,
+                            text: "This request has already been approved and cannot be rejected.",
+                        });
+                        return;
+                    }
+                    logger.info(`Request rejected by ${userName}. Exiting with failure.`);
+                    // Update the main message with rejection
+                    try {
+                        yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: channelId || "" }, (hasPayload(failMessagePayload) ? failMessagePayload : {
+                            text: `❌ Request rejected by <@${userId}>`,
+                            blocks: [
+                                ...mainMessagePayload.blocks.slice(0, -2),
+                                {
+                                    type: "section",
+                                    text: {
+                                        type: "mrkdwn",
+                                        text: `❌ *Request Rejected*\nRejected by <@${userId}> on ${new Date().toLocaleString()}`,
+                                    },
+                                },
+                            ],
+                        })));
+                        // Send confirmation to the rejector
+                        yield client.chat.postEphemeral({
+                            channel: channelId || "",
+                            user: userId,
+                            text: `❌ You rejected the request. The approval process has been cancelled.`,
+                        });
+                    }
+                    catch (updateError) {
+                        logger.error(`Failed to update message with rejection: ${updateError}`);
+                        // Send error notification to user
+                        yield client.chat.postEphemeral({
+                            channel: channelId || "",
+                            user: userId,
+                            text: "❌ Failed to update the rejection message. The request will still be rejected.",
+                        });
+                    }
+                    // Exit with failure code
+                    process.exit(1);
                 }
                 catch (error) {
-                    logger.error(error);
+                    logger.error(`Error in rejection action handler: ${error}`);
+                    // Try to send error notification to user if possible
+                    try {
+                        const userId = (_l = body.user) === null || _l === void 0 ? void 0 : _l.id;
+                        const channelId = (_m = body.channel) === null || _m === void 0 ? void 0 : _m.id;
+                        if (userId && channelId) {
+                            yield client.chat.postEphemeral({
+                                channel: channelId,
+                                user: userId,
+                                text: "❌ An error occurred while processing your rejection. Please try again.",
+                            });
+                        }
+                    }
+                    catch (ephemeralError) {
+                        logger.error(`Failed to send error notification: ${ephemeralError}`);
+                    }
+                    // Still exit with failure even if there was an error
+                    process.exit(1);
                 }
-                process.exit(1);
             }));
             (() => __awaiter(this, void 0, void 0, function* () {
                 yield app.start(3000);
