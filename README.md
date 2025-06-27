@@ -13,7 +13,7 @@ custom action to send approval request to Slack
 - Clicking on "Approve" will execute next steps
 
 ## reject and cancel
-<image src="img/rejected.png" width="800" height="300" />
+<image src="img/rejected.png" width="800" height="100" />
 <image src="img/canceled.png" width="800" height="100" />
 
 - Clicking on "Reject" or "cancel workflow" will cause workflow to fail and update reply message

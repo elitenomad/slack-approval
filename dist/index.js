@@ -132,49 +132,48 @@ function run() {
                 };
             };
             const mainMessagePayload = hasPayload(baseMessagePayload)
-                ? baseMessagePayload
-                : {
-                    blocks: [
-                        {
-                            type: "section",
-                            text: {
+                ? Object.assign(Object.assign({}, baseMessagePayload), { blocks: [...baseMessagePayload.blocks, renderApprovalStatus(), renderApprovalButtons()] }) : {
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "GitHub Actions Approval Request",
+                        },
+                    },
+                    {
+                        type: "section",
+                        fields: [
+                            {
                                 type: "mrkdwn",
-                                text: "GitHub Actions Approval Request",
+                                text: `*GitHub Actor:*\n${actor}`,
                             },
-                        },
-                        {
-                            type: "section",
-                            fields: [
-                                {
-                                    type: "mrkdwn",
-                                    text: `*GitHub Actor:*\n${actor}`,
-                                },
-                                {
-                                    type: "mrkdwn",
-                                    text: `*Repos:*\n${github_server_url}/${github_repos}`,
-                                },
-                                {
-                                    type: "mrkdwn",
-                                    text: `*Actions URL:*\n${actionsUrl}`,
-                                },
-                                {
-                                    type: "mrkdwn",
-                                    text: `*GITHUB_RUN_ID:*\n${run_id}`,
-                                },
-                                {
-                                    type: "mrkdwn",
-                                    text: `*Workflow:*\n${workflow}`,
-                                },
-                                {
-                                    type: "mrkdwn",
-                                    text: `*RunnerOS:*\n${runnerOS}`,
-                                },
-                            ],
-                        },
-                        renderApprovalStatus(),
-                        renderApprovalButtons(),
-                    ],
-                };
+                            {
+                                type: "mrkdwn",
+                                text: `*Repos:*\n${github_server_url}/${github_repos}`,
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*Actions URL:*\n${actionsUrl}`,
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*GITHUB_RUN_ID:*\n${run_id}`,
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*Workflow:*\n${workflow}`,
+                            },
+                            {
+                                type: "mrkdwn",
+                                text: `*RunnerOS:*\n${runnerOS}`,
+                            },
+                        ],
+                    },
+                    renderApprovalStatus(),
+                    renderApprovalButtons(),
+                ],
+            };
             function approve(userId) {
                 const idx = requiredApprovers.findIndex((user) => user === userId);
                 if (idx === -1) {
@@ -193,9 +192,7 @@ function run() {
             core.setOutput("mainMessageTs", mainMessage.ts);
             function cancelHandler() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    yield web.chat.update(Object.assign({ ts: mainMessage.ts, channel: channel_id }, (hasPayload(failMessagePayload)
-                        ? failMessagePayload
-                        : mainMessagePayload)));
+                    yield web.chat.update(Object.assign({ ts: mainMessage.ts, channel: channel_id }, (hasPayload(failMessagePayload) ? failMessagePayload : mainMessagePayload)));
                     process.exit(1);
                 });
             }
@@ -248,24 +245,7 @@ function run() {
                     return;
                 }
                 try {
-                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "" }, (hasPayload(failMessagePayload)
-                        ? failMessagePayload
-                        : mainMessagePayload)));
-                    // await client.chat.update({
-                    //   channel: body.channel?.id || "",
-                    //   ts: mainMessage?.ts || "",
-                    //   text: "",
-                    //   blocks: [
-                    //     ...mainMessagePayload.blocks.slice(0, -2),
-                    //     {
-                    //       type: "section",
-                    //       text: {
-                    //         type: "mrkdwn",
-                    //         text: `Rejected by <@${body.user.id}> :x:`,
-                    //       },
-                    //     },
-                    //   ],
-                    // });
+                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "" }, (hasPayload(failMessagePayload) ? failMessagePayload : mainMessagePayload)));
                 }
                 catch (error) {
                     logger.error(error);

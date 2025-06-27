@@ -115,7 +115,10 @@ async function run(): Promise<void> {
     };
 
     const mainMessagePayload = hasPayload(baseMessagePayload)
-      ? baseMessagePayload
+      ? {
+          ...baseMessagePayload,
+          blocks: [...baseMessagePayload.blocks, renderApprovalStatus(), renderApprovalButtons()]
+        }
       : {
           blocks: [
             {
@@ -191,9 +194,7 @@ async function run(): Promise<void> {
       await web.chat.update({
         ts: mainMessage.ts!,
         channel: channel_id,
-        ...(hasPayload(failMessagePayload)
-          ? failMessagePayload
-          : mainMessagePayload),
+        ...(hasPayload(failMessagePayload) ? failMessagePayload : mainMessagePayload),
       });
       process.exit(1);
     }
@@ -260,26 +261,8 @@ async function run(): Promise<void> {
           await client.chat.update({
             ts: mainMessage.ts || "",
             channel: body.channel?.id || "",
-            ...(hasPayload(failMessagePayload)
-              ? failMessagePayload
-              : mainMessagePayload),
+            ...(hasPayload(failMessagePayload) ? failMessagePayload : mainMessagePayload),
           });
-
-          // await client.chat.update({
-          //   channel: body.channel?.id || "",
-          //   ts: mainMessage?.ts || "",
-          //   text: "",
-          //   blocks: [
-          //     ...mainMessagePayload.blocks.slice(0, -2),
-          //     {
-          //       type: "section",
-          //       text: {
-          //         type: "mrkdwn",
-          //         text: `Rejected by <@${body.user.id}> :x:`,
-          //       },
-          //     },
-          //   ],
-          // });
         } catch (error) {
           logger.error(error);
         }
