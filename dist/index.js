@@ -187,8 +187,6 @@ function run() {
                 }
                 return "approved";
             }
-            console.log("baseMessageTs", baseMessageTs);
-            console.log("mainMessagePayload", mainMessagePayload);
             const mainMessage = baseMessageTs
                 ? yield web.chat.update(Object.assign({ channel: channel_id, ts: baseMessageTs }, mainMessagePayload))
                 : yield web.chat.postMessage(Object.assign({ channel: channel_id }, mainMessagePayload));
@@ -241,7 +239,7 @@ function run() {
                 }
             }));
             app.action(`slack-approval-reject-${unique_step_id}`, ({ ack, client, body, logger, action }) => __awaiter(this, void 0, void 0, function* () {
-                var _c, _d;
+                var _c;
                 yield ack();
                 if (action.type !== "button") {
                     return;
@@ -250,11 +248,15 @@ function run() {
                     return;
                 }
                 try {
-                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "" }, (hasPayload(failMessagePayload)
-                        ? failMessagePayload
-                        : mainMessagePayload)));
+                    // await client.chat.update({
+                    //   ts: mainMessage.ts || "",
+                    //   channel: body.channel?.id || "",
+                    //   ...(hasPayload(failMessagePayload)
+                    //     ? failMessagePayload
+                    //     : mainMessagePayload),
+                    // });
                     yield client.chat.update({
-                        channel: ((_d = body.channel) === null || _d === void 0 ? void 0 : _d.id) || "",
+                        channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "",
                         ts: (mainMessage === null || mainMessage === void 0 ? void 0 : mainMessage.ts) || "",
                         text: "",
                         blocks: [

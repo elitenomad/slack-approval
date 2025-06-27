@@ -174,8 +174,6 @@ async function run(): Promise<void> {
       return "approved";
     }
 
-    console.log("baseMessageTs", baseMessageTs);
-    console.log("mainMessagePayload", mainMessagePayload);
     const mainMessage = baseMessageTs
       ? await web.chat.update({
           channel: channel_id,
@@ -257,14 +255,15 @@ async function run(): Promise<void> {
         if (action.value !== aid) {
           return;
         }
+        
         try {
-          await client.chat.update({
-            ts: mainMessage.ts || "",
-            channel: body.channel?.id || "",
-            ...(hasPayload(failMessagePayload)
-              ? failMessagePayload
-              : mainMessagePayload),
-          });
+          // await client.chat.update({
+          //   ts: mainMessage.ts || "",
+          //   channel: body.channel?.id || "",
+          //   ...(hasPayload(failMessagePayload)
+          //     ? failMessagePayload
+          //     : mainMessagePayload),
+          // });
 
           await client.chat.update({
             channel: body.channel?.id || "",
