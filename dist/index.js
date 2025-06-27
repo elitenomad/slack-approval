@@ -248,28 +248,24 @@ function run() {
                     return;
                 }
                 try {
+                    yield client.chat.update(Object.assign({ ts: mainMessage.ts || "", channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "" }, (hasPayload(failMessagePayload)
+                        ? failMessagePayload
+                        : mainMessagePayload)));
                     // await client.chat.update({
-                    //   ts: mainMessage.ts || "",
                     //   channel: body.channel?.id || "",
-                    //   ...(hasPayload(failMessagePayload)
-                    //     ? failMessagePayload
-                    //     : mainMessagePayload),
+                    //   ts: mainMessage?.ts || "",
+                    //   text: "",
+                    //   blocks: [
+                    //     ...mainMessagePayload.blocks.slice(0, -2),
+                    //     {
+                    //       type: "section",
+                    //       text: {
+                    //         type: "mrkdwn",
+                    //         text: `Rejected by <@${body.user.id}> :x:`,
+                    //       },
+                    //     },
+                    //   ],
                     // });
-                    yield client.chat.update({
-                        channel: ((_c = body.channel) === null || _c === void 0 ? void 0 : _c.id) || "",
-                        ts: (mainMessage === null || mainMessage === void 0 ? void 0 : mainMessage.ts) || "",
-                        text: "",
-                        blocks: [
-                            ...mainMessagePayload.blocks.slice(0, -2),
-                            {
-                                type: "section",
-                                text: {
-                                    type: "mrkdwn",
-                                    text: `Rejected by <@${body.user.id}> :x:`,
-                                },
-                            },
-                        ],
-                    });
                 }
                 catch (error) {
                     logger.error(error);
