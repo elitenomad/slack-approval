@@ -29,6 +29,7 @@ jobs:
         with:
           approvers: U037V34NTGS
           minimumApprovalCount: 1
+          baseMessageTs: "TESTING-1234567890"
           successMessagePayload: |
             {
               "blocks": [
