@@ -4,12 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-  workflow_dispatch:
 
 jobs:
   approval:
@@ -31,6 +25,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          UNIQUE_STEP_ID: "1234567890"
         with:
           approvers: U037V34NTGS
           minimumApprovalCount: 1
@@ -91,7 +86,7 @@ jobs:
                 }
               ]
             }
-        timeout-minutes: 60
+        timeout-minutes: 5
       - name: output test
         run: |
           echo "Main Message Timestamp: ${{ steps.approval.outputs.mainMessageTs }}"

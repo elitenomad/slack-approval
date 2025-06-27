@@ -7,6 +7,7 @@ const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
 const slackAppToken = process.env.SLACK_APP_TOKEN || "";
 const channel_id = process.env.SLACK_CHANNEL_ID || "";
 const unique_step_id = process.env.UNIQUE_STEP_ID || "";
+console.log("unique_step_id", unique_step_id);
 const baseMessageTs = core.getInput("baseMessageTs");
 const requiredApprovers = core
   .getInput("approvers", { required: true, trimWhitespace: true })
@@ -75,7 +76,7 @@ async function run(): Promise<void> {
     };
 
     const renderApprovalButtons = () => {
-      if (minimumApprovalCount > approvers.length) {
+      if (minimumApprovalCount >= approvers.length) {
         return {
           type: "actions",
           elements: [
@@ -173,6 +174,8 @@ async function run(): Promise<void> {
       return "approved";
     }
 
+    console.log("baseMessageTs", baseMessageTs);
+    console.log("mainMessagePayload", mainMessagePayload);
     const mainMessage = baseMessageTs
       ? await web.chat.update({
           channel: channel_id,
