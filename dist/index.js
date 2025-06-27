@@ -76,7 +76,7 @@ function run() {
             const run_number = process.env.GITHUB_RUN_NUMBER || "";
             const run_attempt = process.env.GITHUB_RUN_ATTEMPT || "";
             const workflow = process.env.GITHUB_WORKFLOW || "";
-            const aid = `${github_repos}-${workflow}-${run_id}-${run_number}-${run_attempt}`;
+            const aid = `${github_repos}-${workflow}-${run_id}-${run_number}-${run_attempt}-${unique_step_id}`;
             const runnerOS = process.env.RUNNER_OS || "";
             const actor = process.env.GITHUB_ACTOR || "";
             const actionsUrl = `${github_server_url}/${github_repos}/actions/runs/${run_id}`;
