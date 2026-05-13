@@ -99,6 +99,22 @@ async function run(): Promise<void> {
     app.action(`slack-approval-approve-${uniqueStepId}`, createApproveHandler(handlerDeps));
     app.action(`slack-approval-reject-${uniqueStepId}`, createRejectHandler(handlerDeps));
 
+    // Catch-all: when multiple parallel jobs share one Slack app token, every job opens its
+    // own Socket Mode connection and Slack load-balances clicks across them. A click can land
+    // on a process whose handler isn't registered for that action_id; without an ack, Slack
+    // shows the yellow ⚠️ triangle after 3s. This catch-all acks any slack-approval-* action
+    // so foreign sockets stop timing out. The owning process's specific handler still runs in
+    // parallel and performs the real state mutation + message updates.
+    app.action(/^slack-approval-(approve|reject)-/, async ({ ack, action, logger }) => {
+      await ack();
+      const aid = (action as { action_id?: string }).action_id;
+      if (typeof aid === "string" && !aid.endsWith(`-${uniqueStepId}`)) {
+        logger.info(
+          `Foreign action ${aid} received on step "${uniqueStepId}" socket; acked but ignored (owner socket will handle it if Slack routed there).`,
+        );
+      }
+    });
+
     await app.start(3000);
     console.log("Waiting Approval reaction.....");
 
