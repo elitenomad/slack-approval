@@ -105,13 +105,24 @@ async function run(): Promise<void> {
     // shows the yellow ⚠️ triangle after 3s. This catch-all acks any slack-approval-* action
     // so foreign sockets stop timing out. The owning process's specific handler still runs in
     // parallel and performs the real state mutation + message updates.
-    app.action(/^slack-approval-(approve|reject)-/, async ({ ack, action, logger }) => {
+    app.action(/^slack-approval-(approve|reject)-/, async ({ ack, action, respond, logger }) => {
       await ack();
       const aid = (action as { action_id?: string }).action_id;
-      if (typeof aid === "string" && !aid.endsWith(`-${uniqueStepId}`)) {
-        logger.info(
-          `Foreign action ${aid} received on step "${uniqueStepId}" socket; acked but ignored (owner socket will handle it if Slack routed there).`,
-        );
+      if (typeof aid !== "string" || aid.endsWith(`-${uniqueStepId}`)) {
+        return;
+      }
+      logger.info(
+        `Foreign action ${aid} received on step "${uniqueStepId}" socket; acked but ignored (owner socket did not pick it up).`,
+      );
+      if (!respond) return;
+      try {
+        await respond({
+          response_type: "ephemeral",
+          replace_original: false,
+          text: "🔄 Click didn't reach the right approval handler — please click again. (Slack load-balances button clicks across parallel approval jobs; with N parallel approvals you may need a few tries before Slack routes the click to the owner.)",
+        });
+      } catch (err) {
+        logger.warn(`Failed to send retry hint: ${err}`);
       }
     });
 
