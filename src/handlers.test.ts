@@ -106,8 +106,8 @@ describe("createApproveHandler", () => {
     await createApproveHandler(h.deps)(buildArgs(h, buttonAction()));
 
     expect(h.ack).toHaveBeenCalledOnce();
-    expect(h.update).toHaveBeenCalledOnce();
-    expect(h.update.mock.calls[0][0]).toMatchObject({
+    expect(h.update).toHaveBeenCalledTimes(2);
+    expect(h.update.mock.calls[1][0]).toMatchObject({
       ts: "1700.000",
       channel: "C1",
       text: "yay",
@@ -116,11 +116,24 @@ describe("createApproveHandler", () => {
     expect(h.state.isFullyApproved).toBe(true);
   });
 
+  it("shows a queued state before the final approval update", async () => {
+    const h = buildHarness();
+    await createApproveHandler(h.deps)(buildArgs(h, buttonAction()));
+
+    const queued = h.update.mock.calls[0][0];
+    expect(queued.ts).toBe("1700.000");
+    expect(queued.channel).toBe("C1");
+    expect(queued.blocks).toHaveLength(3);
+    expect(queued.blocks[0]).toEqual(h.deps.mainMessagePayload.blocks[0]);
+    expect(queued.blocks[1]).toEqual(h.deps.mainMessagePayload.blocks[1]);
+    expect(queued.blocks[2].text.text).toMatch(/Queued approval.*<@U1>/);
+  });
+
   it("falls back to mainMessagePayload when successMessagePayload is empty", async () => {
     const h = buildHarness();
     await createApproveHandler(h.deps)(buildArgs(h, buttonAction()));
 
-    const call = h.update.mock.calls[0][0];
+    const call = h.update.mock.calls[1][0];
     expect(call.blocks).toEqual(h.deps.mainMessagePayload.blocks);
     expect(call.text).toBeUndefined();
     expect(h.exit).toHaveBeenCalledExactlyOnceWith(0);
@@ -130,8 +143,8 @@ describe("createApproveHandler", () => {
     const h = buildHarness({ required: ["U1", "U2"], minimum: 2 });
     await createApproveHandler(h.deps)(buildArgs(h, buttonAction()));
 
-    expect(h.update).toHaveBeenCalledOnce();
-    const call = h.update.mock.calls[0][0];
+    expect(h.update).toHaveBeenCalledTimes(2);
+    const call = h.update.mock.calls[1][0];
     expect(call.blocks).toHaveLength(3);
     expect(call.blocks[0]).toEqual(h.deps.mainMessagePayload.blocks[0]);
     expect(call.blocks[1].text.text).toContain("Approvers: <@U1>");
@@ -189,7 +202,7 @@ describe("createApproveHandler", () => {
 
   it("when client.chat.update throws on full approval, logs + posts ephemeral but still exits(0) since state is already approved", async () => {
     const h = buildHarness();
-    h.update.mockRejectedValueOnce(new Error("slack 5xx"));
+    h.update.mockRejectedValue(new Error("slack 5xx"));
 
     await createApproveHandler(h.deps)(buildArgs(h, buttonAction()));
 
@@ -218,8 +231,8 @@ describe("createRejectHandler", () => {
     await createRejectHandler(h.deps)(buildArgs(h, buttonAction()));
 
     expect(h.ack).toHaveBeenCalledOnce();
-    expect(h.update).toHaveBeenCalledOnce();
-    expect(h.update.mock.calls[0][0]).toMatchObject({
+    expect(h.update).toHaveBeenCalledTimes(2);
+    expect(h.update.mock.calls[1][0]).toMatchObject({
       ts: "1700.000",
       channel: "C1",
       text: "denied",
@@ -227,11 +240,22 @@ describe("createRejectHandler", () => {
     expect(h.exit).toHaveBeenCalledExactlyOnceWith(1);
   });
 
+  it("shows a queued state before the final rejection update", async () => {
+    const h = buildHarness();
+    await createRejectHandler(h.deps)(buildArgs(h, buttonAction()));
+
+    const queued = h.update.mock.calls[0][0];
+    expect(queued.ts).toBe("1700.000");
+    expect(queued.channel).toBe("C1");
+    expect(queued.blocks).toHaveLength(3);
+    expect(queued.blocks[2].text.text).toMatch(/Queued rejection.*<@U1>/);
+  });
+
   it("when failMessagePayload is empty, posts default rejection block and exits(1)", async () => {
     const h = buildHarness();
     await createRejectHandler(h.deps)(buildArgs(h, buttonAction()));
 
-    const call = h.update.mock.calls[0][0];
+    const call = h.update.mock.calls[1][0];
     expect(call.text).toContain("<@U1>");
     expect(call.blocks).toHaveLength(2);
     expect(call.blocks[0]).toEqual(h.deps.mainMessagePayload.blocks[0]);
@@ -272,7 +296,7 @@ describe("createRejectHandler", () => {
 
   it("when chat.update throws, still exits(1) after posting ephemeral", async () => {
     const h = buildHarness();
-    h.update.mockRejectedValueOnce(new Error("slack 5xx"));
+    h.update.mockRejectedValue(new Error("slack 5xx"));
 
     await createRejectHandler(h.deps)(buildArgs(h, buttonAction()));
 

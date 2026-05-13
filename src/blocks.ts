@@ -147,6 +147,17 @@ export function replaceTrailingStatusBlocks(
   return [...blocks.slice(0, -2), renderApprovalStatus(state), renderApprovalButtons(state, buttons)];
 }
 
+export function renderQueuedBlock(userId: string, action: "approve" | "reject") {
+  const label = action === "approve" ? "approval" : "rejection";
+  return {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `⏳ *Queued ${label}* from <@${userId}>...`,
+    },
+  };
+}
+
 export function renderRejectionBlock(userId: string) {
   return {
     type: "section",

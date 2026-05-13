@@ -4,6 +4,7 @@ import { ApprovalConfig } from "./config";
 import {
   ButtonConfig,
   hasPayload,
+  renderQueuedBlock,
   renderRejectionBlock,
   replaceTrailingStatusBlocks,
 } from "./blocks";
@@ -55,6 +56,27 @@ function validateButtonClick(
   return true;
 }
 
+async function setQueuedState(
+  client: { chat: { update: (args: any) => Promise<any> } },
+  channelId: string,
+  ts: string,
+  blocks: any[],
+  userId: string,
+  action: "approve" | "reject",
+  logger: { warn: (msg: string) => void },
+): Promise<void> {
+  try {
+    await client.chat.update({
+      channel: channelId,
+      ts,
+      text: "",
+      blocks: [...blocks.slice(0, -1), renderQueuedBlock(userId, action)],
+    });
+  } catch (queuedError) {
+    logger.warn(`Failed to set queued state: ${queuedError}`);
+  }
+}
+
 async function safePostEphemeral(
   client: { chat: { postEphemeral: (args: any) => Promise<any> } },
   channelId: string,
@@ -97,6 +119,16 @@ export function createApproveHandler(deps: HandlerDeps): ButtonHandler {
         await safePostEphemeral(client, channelId || "", userId, "You are not authorized to approve this request.", logger);
         return;
       }
+
+      await setQueuedState(
+        client,
+        channelId || "",
+        mainMessage.ts || "",
+        mainMessagePayload.blocks,
+        userId,
+        "approve",
+        logger,
+      );
 
       const approveResult = state.approve(userId);
       logger.info(`Approval result for ${userName}: ${approveResult}`);
@@ -171,6 +203,16 @@ export function createRejectHandler(deps: HandlerDeps): ButtonHandler {
       }
 
       logger.info(`Request rejected by ${userName}. Exiting with failure.`);
+
+      await setQueuedState(
+        client,
+        channelId || "",
+        mainMessage.ts || "",
+        mainMessagePayload.blocks,
+        userId,
+        "reject",
+        logger,
+      );
 
       try {
         await client.chat.update({
