@@ -1,22 +1,46 @@
 {
-  "name": "@tigerwest/slack-approval",
-  "version": "1.0.2",
-  "description": "",
-  "main": "index.js",
+  "name": "@elitenomad/slack-approval",
+  "version": "1.0.3",
+  "description": "GitHub Action that posts a Slack approval request with Approve/Reject buttons and blocks the workflow until the configured number of approvers respond.",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w"
+    "build": "ncc build src/index.ts -o dist --minify --source-map --license licenses.txt",
+    "watch": "ncc build src/index.ts -o dist --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elitenomad/slack-approval.git"
+  },
+  "bugs": {
+    "url": "https://github.com/elitenomad/slack-approval/issues"
+  },
+  "homepage": "https://github.com/elitenomad/slack-approval#readme",
+  "keywords": [
+    "github-action",
+    "actions",
+    "slack",
+    "approval",
+    "workflow",
+    "bolt",
+    "socket-mode"
+  ],
+  "author": "Pranava S Balugari <pranava@printspeak.com>",
   "license": "ISC",
   "dependencies": {
-    "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1",
-    "@slack/bolt": "^4.0.1",
-    "@slack/web-api": "^7.7.0"
+    "@actions/core": "^1.11.1",
+    "@slack/bolt": "^4.7.2",
+    "@slack/web-api": "^7.15.2"
   },
   "devDependencies": {
-    "@types/node": "^18.8.4",
-    "typescript": "^4.8.4"
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.41",
+    "@vercel/ncc": "^0.38.4",
+    "@vitest/coverage-v8": "^4.1.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.6"
   }
 }

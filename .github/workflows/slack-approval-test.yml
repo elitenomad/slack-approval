@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - modularize
 
 jobs:
   approval:
@@ -13,9 +14,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - run: |
-          npm install
 
       - name: slack-approval
         id: approval
@@ -130,9 +128,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: |
-          npm install
-
       - name: slack-approval
         id: security-approval
         uses: ./
@@ -232,9 +227,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - run: |
-          npm install
 
       - name: slack-approval
         id: qa-approval
