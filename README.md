@@ -1,12 +1,20 @@
 # slack-approval
 
-custom action to send approval request to Slack
+A GitHub Action that pauses a workflow until the right people approve it in Slack.
+
+## Why this fork
+
+This is a maintained fork of [TigerWest/slack-approval](https://github.com/TigerWest/slack-approval), which has had no updates since November 2024. I fixed the issues that stopped it working as a deployment gate and released the changes as v1.0.4 to v1.0.8:
+
+- The "Approve" and "Reject" buttons sit in the main message instead of a thread reply.
+- Button IDs include `UNIQUE_STEP_ID`, so one workflow can run several approval steps in parallel.
+- Approve and reject each update the message with your own `successMessagePayload` or `failMessagePayload`, and fall back to the base message when those aren't set.
 
 
 ## trigger
 <image src="img/approve_at_reply.png" width="800" height="300" />
 
-- When action is triggered, Post or Update in Slack, a reply message appears simultaneously with "Approve" and "Reject" buttons
+- When the action runs, it posts a message to Slack (or updates the one given in `baseMessageTs`) with "Approve" and "Reject" buttons
 ## approve
 <image src="img/approved.png" width="800" height="100" />
 
@@ -16,7 +24,7 @@ custom action to send approval request to Slack
 <image src="img/rejected.png" width="800" height="100" />
 <image src="img/canceled.png" width="800" height="100" />
 
-- Clicking on "Reject" or "cancel workflow" will cause workflow to fail and update reply message
+- Clicking on "Reject" or "cancel workflow" will cause workflow to fail and update the message
 
 
 
@@ -65,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: send approval
-        uses: elitenomad/slack-approval@v1.0.3
+        uses: elitenomad/slack-approval@v1.0.8
         env:
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
